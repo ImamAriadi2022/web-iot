@@ -9,7 +9,7 @@ const Footer = () => {
           {/* Kolom Logo dan Alamat */}
           <Col md={4}>
             <img
-              src="/path/to/logo.png" // Ganti dengan path logo Anda
+              src="./img/logo.png" // Ganti dengan path logo Anda
               alt="Logo"
               className="mb-3"
               style={{ width: '100px' }}

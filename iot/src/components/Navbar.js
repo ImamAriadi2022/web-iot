@@ -24,7 +24,7 @@ const CustomNavbar = () => {
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/">Home</Nav.Link>
             <Nav.Link as={Link} to="/features">Fitur</Nav.Link>
-            <Nav.Link as={Link} to="/faq">FAQ Halaman</Nav.Link>
+            <Nav.Link as={Link} to="/faq">FAQ</Nav.Link>
             <Nav.Link as={Link} to="/help">Bantuan</Nav.Link>
           </Nav>
 
