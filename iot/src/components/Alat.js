@@ -11,7 +11,7 @@ const Alat = () => {
           <Col md={6}>
             <Slide direction="left" triggerOnce>
               <img
-                src="/path/to/product-image.jpg" // Ganti dengan path gambar produk Anda
+                src="./img/product.png" // Ganti dengan path gambar produk Anda
                 alt="Product"
                 className="img-fluid"
               />

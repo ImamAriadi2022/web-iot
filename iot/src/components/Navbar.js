@@ -9,13 +9,12 @@ const CustomNavbar = () => {
         {/* Logo dan Nama Produk */}
         <Navbar.Brand as={Link} to="/">
           <img
-            src="/path/to/logo.png" // Ganti dengan path logo Anda
+            src="./img/logo.png" // Ganti dengan path logo Anda
             alt="Logo"
-            width="30"
-            height="30"
+            width="200"
+            height="40"
             className="d-inline-block align-top"
           />{' '}
-          Nama Produk
         </Navbar.Brand>
 
         {/* Tombol Toggle untuk Navbar di layar kecil */}

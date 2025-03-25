@@ -26,7 +26,7 @@ const Launch = () => {
           <Col md={6}>
             <Slide direction="right" triggerOnce>
               <img
-                src="/path/to/launch-image.jpg" // Ganti dengan path gambar Anda
+                src="./img/dashboard.png" // Ganti dengan path gambar Anda
                 alt="Launch"
                 className="img-fluid"
               />

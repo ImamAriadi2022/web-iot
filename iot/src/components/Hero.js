@@ -29,7 +29,7 @@ const Hero = () => {
           <Col md={6}>
             <Slide direction="right" triggerOnce>
               <img
-                src="/path/to/illustration.png" // Ganti dengan path gambar ilustrasi Anda
+                src="./img/hero.png" // Ganti dengan path gambar ilustrasi Anda
                 alt="Illustration"
                 className="img-fluid"
               />
