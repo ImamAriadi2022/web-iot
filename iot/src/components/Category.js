@@ -1,5 +1,6 @@
 import React from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
+import { Slide } from 'react-awesome-reveal';
 
 const categories = [
   { title: 'Temperature', description: 'Monitor real-time temperature data.' },
@@ -17,12 +18,14 @@ const Category = () => {
         <Row className="g-4">
           {categories.map((category, index) => (
             <Col md={4} key={index}>
-              <Card className="h-100">
-                <Card.Body>
-                  <Card.Title>{category.title}</Card.Title>
-                  <Card.Text>{category.description}</Card.Text>
-                </Card.Body>
-              </Card>
+              <Slide direction="up" triggerOnce>
+                <Card className="h-100">
+                  <Card.Body>
+                    <Card.Title>{category.title}</Card.Title>
+                    <Card.Text>{category.description}</Card.Text>
+                  </Card.Body>
+                </Card>
+              </Slide>
             </Col>
           ))}
         </Row>

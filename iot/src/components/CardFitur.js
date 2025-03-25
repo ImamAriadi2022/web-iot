@@ -1,6 +1,7 @@
 import React from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
 import { FaDesktop, FaDatabase, FaBell, FaCogs, FaFileExport, FaChartLine } from 'react-icons/fa';
+import { Slide } from 'react-awesome-reveal';
 
 const features = [
   {
@@ -42,13 +43,15 @@ const CardFitur = () => {
         <Row className="g-4">
           {features.map((feature, index) => (
             <Col md={4} key={index}>
-              <Card className="h-100 text-center">
-                <Card.Body>
-                  <div className="mb-3">{feature.icon}</div>
-                  <Card.Title style={{ fontWeight: 'bold', color: '#000' }}>{feature.title}</Card.Title>
-                  <Card.Text>{feature.description}</Card.Text>
-                </Card.Body>
-              </Card>
+              <Slide direction="up" triggerOnce>
+                <Card className="h-100 text-center">
+                  <Card.Body>
+                    <div className="mb-3">{feature.icon}</div>
+                    <Card.Title style={{ fontWeight: 'bold', color: '#000' }}>{feature.title}</Card.Title>
+                    <Card.Text>{feature.description}</Card.Text>
+                  </Card.Body>
+                </Card>
+              </Slide>
             </Col>
           ))}
         </Row>

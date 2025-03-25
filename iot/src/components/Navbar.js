@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 const CustomNavbar = () => {
   return (
-    <Navbar bg="light" expand="lg">
+    <Navbar bg="light" expand="lg" fixed="top">
       <Container>
         {/* Logo dan Nama Produk */}
         <Navbar.Brand as={Link} to="/">
