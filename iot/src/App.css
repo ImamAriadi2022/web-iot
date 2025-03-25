@@ -13,6 +13,10 @@
   }
 }
 
+.custom-accordion .accordion-button::after {
+  display: none; /* Sembunyikan tanda panah bawaan */
+}
+
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
