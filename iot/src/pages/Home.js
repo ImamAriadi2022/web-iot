@@ -8,6 +8,7 @@ import Alat from '../components/Alat';
 import Launch from '../components/Launch';
 import FAQ from '../components/FAQ';
 import Footer from '../components/Footer';
+import ScrollToTopButton from '../components/button';
 
 const Home = () => {
   return (
@@ -38,6 +39,9 @@ const Home = () => {
 
         {/* Footer */}
         <Footer />
+
+        {/* Scroll to Top Button */}
+        <ScrollToTopButton />
     </>
   );
 };
