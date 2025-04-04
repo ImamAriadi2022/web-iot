@@ -3,6 +3,10 @@ import { Container, Row, Col, Table, ButtonGroup, Button } from 'react-bootstrap
 import { FaThermometerHalf, FaTint, FaTachometerAlt, FaSun } from 'react-icons/fa';
 import { RadialBarChart, RadialBar, Legend, ResponsiveContainer } from 'recharts';
 
+// memasukan komponen yang dibutuhkan
+import TemperatureGauge from './status/TemperaturGauge';
+import HumidityGauge from './status/HumidityGauge';
+
 const allData = [
     { timestamp: '2025-03-01', humidity: 65, temperature: 28, airPressure: 1012, irradiation: 500, oxygen: 21, rainfall: 10, windspeed: 15, windDirection: 'N' },
     { timestamp: '2025-03-02', humidity: 70, temperature: 30, airPressure: 1010, irradiation: 520, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 'NE' },
@@ -38,7 +42,7 @@ const allData = [
     { timestamp: '2025-04-01', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 'NE' },
     { timestamp: '2025-04-02', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 'E' },
     { timestamp: '2025-04-03', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 'S' },
-    { timestamp: '2025-04-04', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 'W' },
+    { timestamp: '2025-04-04', humidity: 100, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 'W' },
     { timestamp: '2025-04-05', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
     { timestamp: '2025-04-06', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 'N' },
     { timestamp: '2025-04-07', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 'NE' },
@@ -145,14 +149,14 @@ const Station1 = () => {
         <Row className="g-4">
           <Col md={3} className="text-center">
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
-              <FaTint size={40} color="#007bff" />
+              <HumidityGauge humidity={filteredData.length > 0 ? filteredData[0].humidity : 0} />
               <h5>Humidity</h5>
               <p>{filteredData.length > 0 ? `${filteredData[0].humidity}%` : 'N/A'}</p>
             </div>
           </Col>
           <Col md={3} className="text-center">
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
-              <FaThermometerHalf size={40} color="#007bff" />
+              <TemperatureGauge temperature={filteredData.length > 0 ? filteredData[0].temperature : 0} />
               <h5>Temperature</h5>
               <p>{filteredData.length > 0 ? `${filteredData[0].temperature}°C` : 'N/A'}</p>
             </div>
