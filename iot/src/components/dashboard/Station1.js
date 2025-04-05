@@ -113,12 +113,21 @@ const Station1 = () => {
     if (filteredData.length > 0) {
       const avgHumidity = filteredData.reduce((sum, item) => sum + item.humidity, 0) / filteredData.length;
       const avgTemperature = filteredData.reduce((sum, item) => sum + item.temperature, 0) / filteredData.length;
+      const avgAirPressure = filteredData.reduce((sum, item) => sum + item.airPressure, 0) / filteredData.length;
+      const avgIrradiation = filteredData.reduce((sum, item) => sum + item.irradiation, 0) / filteredData.length;
+      const avgOxygen = filteredData.reduce((sum, item) => sum + item.oxygen, 0) / filteredData.length;
+      const avgRainfall = filteredData.reduce((sum, item) => sum + item.rainfall, 0) / filteredData.length;
       const avgWindspeed = filteredData.reduce((sum, item) => sum + item.windspeed, 0) / filteredData.length;
+  
 
       setChartData([
         { name: 'Humidity', value: avgHumidity, fill: '#8884d8' },
         { name: 'Temperature', value: avgTemperature, fill: '#83a6ed' },
         { name: 'Windspeed', value: avgWindspeed, fill: '#8dd1e1' },
+        { name: 'Air Pressure', value: avgAirPressure, fill: '#82ca9d' },
+        { name: 'Irradiation', value: avgIrradiation, fill: '#ffc658' },
+        { name: 'Oxygen', value: avgOxygen, fill: '#ff7300' },
+        { name: 'Rainfall', value: avgRainfall, fill: '#ff0000' },
       ]);
     } else {
       setChartData([]);
@@ -156,7 +165,7 @@ const Station1 = () => {
             </div>
           </Col>
           <Col md={3} className="text-center">
-            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
+            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10</Col>px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
               <TemperatureGauge temperature={filteredData.length > 0 ? filteredData[0].temperature : 0} />
               <h5>Temperature</h5>
               <p>{filteredData.length > 0 ? `${filteredData[0].temperature}°C` : 'N/A'}</p>
@@ -236,33 +245,45 @@ const Station1 = () => {
           </Col>
         </Row>
         <Row>
-          <Col md={6}>
+
+            <Col md={6}>
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
               {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <RadialBarChart
-                    cx="50%"
-                    cy="50%"
-                    innerRadius="20%"
-                    outerRadius="90%"
-                    barSize={10}
-                    data={chartData}
-                  >
-                    <RadialBar minAngle={15} background clockWise dataKey="value" />
-                    <Legend
-                      iconSize={10}
-                      layout="horizontal"
-                      verticalAlign="bottom"
-                      align="center"
-                      wrapperStyle={{ color: '#212529' }}
-                    />
-                  </RadialBarChart>
-                </ResponsiveContainer>
+                <>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RadialBarChart
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="20%"
+                      outerRadius="90%"
+                      barSize={10}
+                      data={chartData}
+                    >
+                      <RadialBar minAngle={15} background clockWise dataKey="value" />
+                      <Legend
+                        iconSize={10}
+                        layout="horizontal"
+                        verticalAlign="bottom"
+                        align="center"
+                        wrapperStyle={{ color: '#212529' }}
+                      />
+                    </RadialBarChart>
+                  </ResponsiveContainer>
+                  {/* Tampilkan nilai-nilai dari chartData */}
+                  <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                    {chartData.map((item, index) => (
+                      <p key={index} style={{ margin: '5px 0', color: '#007bff', fontWeight: 'bold' }}>
+                        {item.name}: {item.value.toFixed(1)}
+                      </p>
+                    ))}
+                  </div>
+                </>
               ) : (
                 <p className="text-center" style={{ color: '#007bff' }}>No data available for the selected filter</p>
               )}
             </div>
           </Col>
+
           <Col md={6}>
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
               <h4 style={{ color: '#007bff' }}>Location</h4>
