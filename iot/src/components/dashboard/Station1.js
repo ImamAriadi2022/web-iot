@@ -6,6 +6,7 @@ import { RadialBarChart, RadialBar, Legend, ResponsiveContainer } from 'recharts
 // memasukan komponen yang dibutuhkan
 import TemperatureGauge from './status/TemperaturGauge';
 import HumidityGauge from './status/HumidityGauge';
+import AirPressureGauge from './status/AirPressure';
 
 const allData = [
     { timestamp: '2025-03-01', humidity: 65, temperature: 28, airPressure: 1012, irradiation: 500, oxygen: 21, rainfall: 10, windspeed: 15, windDirection: 'N' },
@@ -163,7 +164,7 @@ const Station1 = () => {
           </Col>
           <Col md={3} className="text-center">
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
-              <FaTachometerAlt size={40} color="#007bff" />
+              <AirPressureGauge airPressure={filteredData.length > 0 ? filteredData[0].airPressure : 0} />
               <h5>Air Pressure</h5>
               <p>{filteredData.length > 0 ? `${filteredData[0].airPressure} hPa` : 'N/A'}</p>
             </div>
