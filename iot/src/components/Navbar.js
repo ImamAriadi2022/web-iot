@@ -28,15 +28,6 @@ const CustomNavbar = () => {
             <Nav.Link as={Link} to="/help">Bantuan</Nav.Link>
           </Nav>
 
-          {/* Tombol Sign In dan Sign Up di sebelah kanan */}
-          <Nav>
-            <Button variant="outline-primary" as={Link} to="/signin" className="me-2">
-              Sign In
-            </Button>
-            <Button variant="primary" as={Link} to="/signup">
-              Sign Up
-            </Button>
-          </Nav>
         </Navbar.Collapse>
       </Container>
     </Navbar>
