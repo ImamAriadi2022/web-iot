@@ -56,7 +56,7 @@ const allData = [
   { timestamp: '2025-04-06', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 0 },
   { timestamp: '2025-04-07', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 45 },
   { timestamp: '2025-04-08', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 90 },
-  { timestamp: '2025-04-09', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 180 },
+  { timestamp: '2025-04-09', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 18, rainfall: 14, windspeed: 14, windDirection: 180 },
   { timestamp: '2025-04-10', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 270 },
   { timestamp: '2025-04-11', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
   { timestamp: '2025-04-12', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 0 },

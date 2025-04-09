@@ -10,146 +10,29 @@ const Download = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [fileFormat, setFileFormat] = useState('excel');
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // State untuk autentikasi
+  const [showLoginPopup, setShowLoginPopup] = useState(false); // State untuk menampilkan pop-up login
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  // Data untuk Station 1
- const station1Data = [
-     { timestamp: '2025-03-01', humidity: 65, temperature: 28, airPressure: 1012, irradiation: 500, oxygen: 21, rainfall: 10, windspeed: 15, windDirection: 'N' },
-     { timestamp: '2025-03-02', humidity: 70, temperature: 30, airPressure: 1010, irradiation: 520, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 'NE' },
-     { timestamp: '2025-03-03', humidity: 60, temperature: 27, airPressure: 1015, irradiation: 480, oxygen: 20.9, rainfall: 8, windspeed: 12, windDirection: 'E' },
-     { timestamp: '2025-03-04', humidity: 75, temperature: 29, airPressure: 1011, irradiation: 510, oxygen: 20.7, rainfall: 12, windspeed: 14, windDirection: 'S' },
-     { timestamp: '2025-03-05', humidity: 68, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 'W' },
-     { timestamp: '2025-03-06', humidity: 72, temperature: 31, airPressure: 1010, irradiation: 530, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-     { timestamp: '2025-03-07', humidity: 66, temperature: 28, airPressure: 1014, irradiation: 495, oxygen: 20.9, rainfall: 9, windspeed: 13, windDirection: 'N' },
-     { timestamp: '2025-03-08', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 505, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 'NE' },
-     { timestamp: '2025-03-09', humidity: 63, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 11, windspeed: 12, windDirection: 'E' },
-     { timestamp: '2025-03-10', humidity: 74, temperature: 30, airPressure: 1011, irradiation: 520, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 'S' },
-     { timestamp: '2025-03-11', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 8, windspeed: 9, windDirection: 'W' },
-     { timestamp: '2025-03-12', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 7, windspeed: 11, windDirection: 'NW' },
-     { timestamp: '2025-03-13', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 'N' },
-     { timestamp: '2025-03-14', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 'NE' },
-     { timestamp: '2025-03-15', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 'E' },
-     { timestamp: '2025-03-16', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 'S' },
-     { timestamp: '2025-03-17', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 'W' },
-     { timestamp: '2025-03-18', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-     { timestamp: '2025-03-19', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 'N' },
-     { timestamp: '2025-03-20', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 'NE' },
-     { timestamp: '2025-03-21', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 'E' },
-     { timestamp: '2025-03-22', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 'S' },
-     { timestamp: '2025-03-23', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 'W' },
-     { timestamp: '2025-03-24', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-     { timestamp: '2025-03-25', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 'N' },
-     { timestamp: '2025-03-26', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 'NE' },
-     { timestamp: '2025-03-27', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 'E' },
-     { timestamp: '2025-03-28', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 'S' },
-     { timestamp: '2025-03-29', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 'W' },
-     { timestamp: '2025-03-30', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-     { timestamp: '2025-03-31', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 'N' },
-     { timestamp: '2025-04-01', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 'NE' },
-     { timestamp: '2025-04-02', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 'E' },
-     { timestamp: '2025-04-03', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 'S' },
-     { timestamp: '2025-04-04', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 'W' },
-     { timestamp: '2025-04-05', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-     { timestamp: '2025-04-06', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 'N' },
-     { timestamp: '2025-04-07', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 'NE' },
-     { timestamp: '2025-04-08', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 'E' },
-     { timestamp: '2025-04-09', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 'S' },
-     { timestamp: '2025-04-10', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 'W' },
-     { timestamp: '2025-04-11', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-     { timestamp: '2025-04-12', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 'N' },
-     { timestamp: '2025-04-13', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 'NE' },
-     { timestamp: '2025-04-14', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 'E' },
-     { timestamp: '2025-04-15', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 'S' },
-     { timestamp: '2025-04-16', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 'W' },
-     { timestamp: '2025-04-17', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-     { timestamp: '2025-04-18', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 'N' },
-     { timestamp: '2025-04-19', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 'NE' },
-     { timestamp: '2025-04-20', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 'E' },
-     { timestamp: '2025-04-21', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 'S' },
-     { timestamp: '2025-04-22', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 'W' },
-     { timestamp: '2025-04-23', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-     { timestamp: '2025-04-24', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 'N' },
-     { timestamp: '2025-04-25', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 'NE' },
-     { timestamp: '2025-04-26', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 'E' },
-     { timestamp: '2025-04-27', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 'S' },
-     { timestamp: '2025-04-28', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 'W' },
-     { timestamp: '2025-04-29', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-     { timestamp: '2025-04-30', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 'N' },
- ];
-
-  // Data untuk Station 2
-  const station2Data = [
-    { timestamp: '2025-03-08', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 505, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 'NE' },
-    { timestamp: '2025-03-09', humidity: 63, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 11, windspeed: 12, windDirection: 'E' },
-    { timestamp: '2025-03-10', humidity: 74, temperature: 30, airPressure: 1011, irradiation: 520, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 'S' },
-    { timestamp: '2025-03-11', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 8, windspeed: 9, windDirection: 'W' },
-    { timestamp: '2025-03-12', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 7, windspeed: 11, windDirection: 'NW' },
-    { timestamp: '2025-03-13', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 'N' },
-    { timestamp: '2025-03-14', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 'NE' },
-    { timestamp: '2025-03-15', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 'E' },
-    { timestamp: '2025-03-16', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 'S' },
-    { timestamp: '2025-03-17', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 'W' },
-    { timestamp: '2025-03-18', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-    { timestamp: '2025-03-19', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 'N' },
-    { timestamp: '2025-03-20', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 'NE' },
-    { timestamp: '2025-03-21', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 'E' },
-    { timestamp: '2025-03-22', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 'S' },
-    { timestamp: '2025-03-23', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 'W' },
-    { timestamp: '2025-03-24', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-    { timestamp: '2025-03-25', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 'N' },
-    { timestamp: '2025-03-26', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 'NE' },
-    { timestamp: '2025-03-27', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 'E' },
-    { timestamp: '2025-03-28', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 'S' },
-    { timestamp: '2025-03-29', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 'W' },
-    { timestamp: '2025-03-30', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-    { timestamp: '2025-03-31', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 'N' },
-    { timestamp: '2025-04-01', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 'NE' },
-    { timestamp: '2025-04-02', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 'E' },
-    { timestamp: '2025-04-03', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 'S' },
-    { timestamp: '2025-04-04', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 'W' },
-    { timestamp: '2025-04-05', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-    { timestamp: '2025-04-06', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 'N' },
-    { timestamp: '2025-04-07', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 'NE' },
-    { timestamp: '2025-04-08', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 'E' },
-    { timestamp: '2025-04-09', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 'S' },
-    { timestamp: '2025-04-10', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 'W' },
-    { timestamp: '2025-04-11', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-    { timestamp: '2025-04-12', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 'N' },
-    { timestamp: '2025-04-13', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 'NE' },
-    { timestamp: '2025-04-14', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 'E' },
-    { timestamp: '2025-04-15', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 'S' },
-    { timestamp: '2025-04-16', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 'W' },
-    { timestamp: '2025-04-17', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-    { timestamp: '2025-04-18', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 'N' },
-    { timestamp: '2025-04-19', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 'NE' },
-    { timestamp: '2025-04-20', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 'E' },
-    { timestamp: '2025-04-21', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 'S' },
-    { timestamp: '2025-04-22', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 'W' },
-    { timestamp: '2025-04-23', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-    { timestamp: '2025-04-24', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 'N' },
-    { timestamp: '2025-04-25', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 'NE' },
-    { timestamp: '2025-04-26', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 'E' },
-    { timestamp: '2025-04-27', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 'S' },
-    { timestamp: '2025-04-28', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 'W' },
-    { timestamp: '2025-04-29', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 'NW' },
-    { timestamp: '2025-04-30', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 'N' },
-  ];
-
-  // Fungsi untuk mendapatkan data berdasarkan station yang dipilih
-  const getStationData = () => {
-    return selectedStation === 'Station 1' ? station1Data : station2Data;
+  const handleLogin = () => {
+    if (username === 'admin' && password === 'admin123') {
+      setIsAuthenticated(true);
+      setShowLoginPopup(false); // Tutup pop-up setelah login berhasil
+    } else {
+      setError('Invalid username or password');
+    }
   };
 
-  // Fungsi untuk memfilter data berdasarkan rentang tanggal
-  const filterDataByDate = (data) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    return data.filter((item) => {
-      const itemDate = new Date(item.timestamp);
-      return itemDate >= start && itemDate <= end;
-    });
+  const handleDownloadClick = () => {
+    if (!isAuthenticated) {
+      setShowLoginPopup(true); // Tampilkan pop-up login jika belum login
+    } else {
+      handleDownload(); // Lanjutkan ke proses download jika sudah login
+    }
   };
 
-  // Fungsi untuk menangani download
   const handleDownload = () => {
     if (!startDate || !endDate) {
       alert('Please select both start date and end date.');
@@ -181,14 +64,234 @@ const Download = () => {
     }
   };
 
+  const getStationData = () => {
+    return selectedStation === 'Station 1' ? station1Data : station2Data;
+  };
+
+  const filterDataByDate = (data) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return data.filter((item) => {
+      const itemDate = new Date(item.timestamp);
+      return itemDate >= start && itemDate <= end;
+    });
+  };
+
+  // Data untuk Station 1 dan Station 2
+  const station1Data = [
+    { timestamp: '2025-03-01', humidity: 65, temperature: 28, airPressure: 1012, irradiation: 500, oxygen: 21, rainfall: 10, windspeed: 15, windDirection: 0 },
+    { timestamp: '2025-03-02', humidity: 70, temperature: 30, airPressure: 1010, irradiation: 520, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 12 },
+    { timestamp: '2025-03-03', humidity: 60, temperature: 27, airPressure: 1015, irradiation: 480, oxygen: 20.9, rainfall: 8, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-03-04', humidity: 75, temperature: 29, airPressure: 1011, irradiation: 510, oxygen: 20.7, rainfall: 12, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-03-05', humidity: 68, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-03-06', humidity: 72, temperature: 31, airPressure: 1010, irradiation: 530, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-03-07', humidity: 66, temperature: 28, airPressure: 1014, irradiation: 495, oxygen: 20.9, rainfall: 9, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-03-08', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 505, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-03-09', humidity: 63, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 11, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-03-10', humidity: 74, temperature: 30, airPressure: 1011, irradiation: 520, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-03-11', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 8, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-03-12', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 7, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-03-13', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-03-14', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-03-15', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-03-16', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-03-17', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-03-18', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-03-19', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-03-20', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-03-21', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-03-22', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-03-23', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-03-24', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-03-25', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-03-26', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-03-27', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-03-28', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-03-29', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-03-30', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-03-31', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-04-01', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-04-02', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-04-03', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-04-04', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-04-05', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-04-06', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-04-07', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-04-08', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-04-09', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 18, rainfall: 14, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-04-10', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-04-11', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-04-12', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-04-13', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-04-14', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-04-15', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-04-16', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-04-17', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-04-18', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-04-19', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-04-20', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-04-21', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-04-22', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-04-23', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-04-24', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-04-25', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-04-26', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-04-27', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-04-28', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-04-29', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-04-30', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-05-01', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-05-02', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 90 },
+  ];
+  
+  const station2Data = [
+    { timestamp: '2025-03-01', humidity: 65, temperature: 28, airPressure: 1012, irradiation: 500, oxygen: 21, rainfall: 10, windspeed: 15, windDirection: 0 },
+    { timestamp: '2025-03-02', humidity: 70, temperature: 30, airPressure: 1010, irradiation: 520, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 12 },
+    { timestamp: '2025-03-03', humidity: 60, temperature: 27, airPressure: 1015, irradiation: 480, oxygen: 20.9, rainfall: 8, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-03-04', humidity: 75, temperature: 29, airPressure: 1011, irradiation: 510, oxygen: 20.7, rainfall: 12, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-03-05', humidity: 68, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-03-06', humidity: 72, temperature: 31, airPressure: 1010, irradiation: 530, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-03-07', humidity: 66, temperature: 28, airPressure: 1014, irradiation: 495, oxygen: 20.9, rainfall: 9, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-03-08', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 505, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-03-09', humidity: 63, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 11, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-03-10', humidity: 74, temperature: 30, airPressure: 1011, irradiation: 520, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-03-11', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 8, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-03-12', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 7, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-03-13', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-03-14', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-03-15', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-03-16', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-03-17', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-03-18', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-03-19', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-03-20', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-03-21', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-03-22', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-03-23', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-03-24', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-03-25', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-03-26', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-03-27', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-03-28', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-03-29', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-03-30', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-03-31', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-04-01', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-04-02', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-04-03', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-04-04', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-04-05', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-04-06', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-04-07', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-04-08', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-04-09', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 18, rainfall: 14, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-04-10', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-04-11', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-04-12', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-04-13', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-04-14', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-04-15', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-04-16', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-04-17', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-04-18', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-04-19', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-04-20', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-04-21', humidity: 73, temperature: 30, airPressure: 1011, irradiation: 525, oxygen: 20.7, rainfall: 14, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-04-22', humidity: 66, temperature: 26, airPressure: 1013, irradiation: 495, oxygen: 21, rainfall: 9, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-04-23', humidity: 70, temperature: 31, airPressure: 1010, irradiation: 535, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-04-24', humidity: 65, temperature: 28, airPressure: 1014, irradiation: 505, oxygen: 20.9, rainfall: 11, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-04-25', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 515, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-04-26', humidity: 61, temperature: 27, airPressure: 1016, irradiation: 485, oxygen: 21, rainfall: 8, windspeed: 12, windDirection: 90 },
+    { timestamp: '2025-04-27', humidity: 72, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 13, windspeed: 14, windDirection: 180 },
+    { timestamp: '2025-04-28', humidity: 67, temperature: 26, airPressure: 1013, irradiation: 490, oxygen: 21, rainfall: 7, windspeed: 9, windDirection: 270 },
+    { timestamp: '2025-04-29', humidity: 71, temperature: 32, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 6, windspeed: 11, windDirection: 315 },
+    { timestamp: '2025-04-30', humidity: 64, temperature: 28, airPressure: 1014, irradiation: 500, oxygen: 20.9, rainfall: 10, windspeed: 13, windDirection: 0 },
+    { timestamp: '2025-05-01', humidity: 68, temperature: 29, airPressure: 1012, irradiation: 510, oxygen: 20.8, rainfall: 5, windspeed: 10, windDirection: 45 },
+    { timestamp: '2025-05-02', humidity: 62, temperature: 27, airPressure: 1016, irradiation: 480, oxygen: 21, rainfall: 12, windspeed: 12, windDirection: 90 },
+  ];
+  
+
   return (
     <Container style={{ marginTop: '20px' }}>
+      {/* Pop-up Login */}
+      {showLoginPopup && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#fff',
+              padding: '20px',
+              borderRadius: '10px',
+              boxShadow: '0 0 15px rgba(0, 0, 0, 0.3)',
+              width: '300px',
+              textAlign: 'center',
+            }}
+          >
+            <h3 style={{ marginBottom: '20px', color: '#007bff' }}>Login</h3>
+            <input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                marginBottom: '10px',
+                borderRadius: '5px',
+                border: '1px solid #ccc',
+              }}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                marginBottom: '10px',
+                borderRadius: '5px',
+                border: '1px solid #ccc',
+              }}
+            />
+            {error && <p style={{ color: 'red', fontSize: '14px' }}>{error}</p>}
+            <button
+              onClick={handleLogin}
+              style={{
+                width: '100%',
+                padding: '10px',
+                backgroundColor: '#007bff',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer',
+              }}
+            >
+              Login
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
       <Row>
         <Col>
           <h3 className="text-center fw-bold text-primary">Download Data</h3>
         </Col>
       </Row>
-  
+
       <Row className="mt-4 d-flex justify-content-center">
         <Col md={6} className="text-center">
           <Button
@@ -207,13 +310,7 @@ const Download = () => {
           </Button>
         </Col>
       </Row>
-  
-      <Row className="mt-4">
-        <Col className="text-center">
-          <h5 className="fw-semibold text-secondary">{selectedStation}</h5>
-        </Col>
-      </Row>
-  
+
       <Row className="mt-4">
         <Col md={6}>
           <Form.Group controlId="startDate">
@@ -238,7 +335,7 @@ const Download = () => {
           </Form.Group>
         </Col>
       </Row>
-  
+
       <Row className="mt-4">
         <Col>
           <Form.Group controlId="fileFormat">
@@ -252,52 +349,32 @@ const Download = () => {
               onChange={(e) => setFileFormat(e.target.value)}
               className="fw-semibold"
             />
+            <Form.Check
+              type="radio"
+              label="PDF"
+              name="fileFormat"
+              value="pdf"
+              checked={fileFormat === 'pdf'}
+              onChange={(e) => setFileFormat(e.target.value)}
+              className="fw-semibold"
+            />
           </Form.Group>
         </Col>
       </Row>
-  
+
       <Row className="mt-4">
         <Col className="text-center">
           <Button
             variant="success"
-            onClick={handleDownload}
+            onClick={handleDownloadClick} // Gunakan handleDownloadClick untuk memeriksa autentikasi
             className="px-5 py-2 fw-bold shadow-lg download-btn"
           >
             Download Data
           </Button>
         </Col>
       </Row>
-  
-      <style jsx>{`
-        .form-control-custom {
-          border-radius: 10px;
-          padding: 10px;
-          font-size: 16px;
-          transition: 0.3s;
-        }
-        .form-control-custom:focus {
-          border-color: #007bff;
-          box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
-        }
-        .active-btn {
-          background: linear-gradient(135deg, #007bff, #0056b3);
-          color: white !important;
-          border: none;
-        }
-        .active-btn:hover {
-          filter: brightness(1.1);
-        }
-        .download-btn {
-          border-radius: 10px;
-          transition: 0.3s;
-        }
-        .download-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 15px rgba(40, 167, 69, 0.4);
-        }
-      `}</style>
     </Container>
-  );  
+  );
 };
 
 export default Download;
