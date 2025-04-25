@@ -193,7 +193,7 @@ const Station2 = () => {
         <Row className="mb-5">
           <Col>
             <h2 className="text-center" style={{ color: '#007bff' }}>Environment Status</h2>
-            <p className="text-center">Data collected from the station 1</p>
+            <p className="text-center">Data collected from the station 2</p>
           </Col>
         </Row>
         
