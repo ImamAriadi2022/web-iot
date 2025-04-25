@@ -12,8 +12,18 @@ const TemperatureGauge = ({ temperature }) => {
     return "Sangat Panas";
   };
 
+  // Fungsi untuk menentukan warna berdasarkan kategori
+  const getColor = (temp) => {
+    if (temp < 15) return ["#0000FF", "#e6e6e6"]; // Biru
+    if (temp < 20) return ["#87CEEB", "#e6e6e6"]; // Biru Muda
+    if (temp < 25) return ["#00FF00", "#e6e6e6"]; // Hijau
+    if (temp < 30) return ["#FFD700", "#e6e6e6"]; // Kuning
+    if (temp < 35) return ["#FFA500", "#e6e6e6"]; // Orange
+    return ["#FF4500", "#e6e6e6"]; // Merah
+  };
+
   // Hitung nilai persen untuk GaugeChart
-  const percentValue = (temperature - 10) / 30;
+  const percentValue = (temperature - 10) / 30; // Asumsi rentang suhu adalah 10°C hingga 40°C
 
   return (
     <div style={{ width: "200px", margin: "0 auto" }}>
@@ -21,7 +31,7 @@ const TemperatureGauge = ({ temperature }) => {
         id="temperature-gauge"
         nrOfLevels={100}
         arcsLength={[percentValue, 1 - percentValue]}
-        colors={["#FF4500", "#e6e6e6"]}
+        colors={getColor(temperature)} // Warna berdasarkan kategori
         percent={percentValue}
         arcPadding={0.01}
         cornerRadius={3}

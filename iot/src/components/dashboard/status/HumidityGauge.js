@@ -11,6 +11,15 @@ const HumidityGauge = ({ humidity }) => {
     return "Sangat Lembap";
   };
 
+  // Fungsi untuk menentukan warna berdasarkan kategori
+  const getColor = (hum) => {
+    if (hum < 30) return ["#FFA500", "#e6e6e6"]; // Orange
+    if (hum < 40) return ["#ADFF2F", "#e6e6e6"]; // Hijau Muda
+    if (hum < 60) return ["#00FF00", "#e6e6e6"]; // Hijau
+    if (hum < 80) return ["#FFD700", "#e6e6e6"]; // Kuning
+    return ["#FF4500", "#e6e6e6"]; // Orange (Sangat Lembap)
+  };
+
   // Hitung nilai persen untuk GaugeChart
   const percentValue = humidity / 100;
 
@@ -20,7 +29,7 @@ const HumidityGauge = ({ humidity }) => {
         id="humidity-gauge"
         nrOfLevels={100}
         arcsLength={[percentValue, 1 - percentValue]}
-        colors={["#1E90FF", "#e6e6e6"]}
+        colors={getColor(humidity)} // Warna berdasarkan kategori
         percent={percentValue}
         arcPadding={0.01}
         cornerRadius={3}

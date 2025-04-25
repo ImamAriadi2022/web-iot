@@ -6,11 +6,20 @@ const OxygenGauge = ({ oxygen }) => {
   const getCategory = (oxy) => {
     if (oxy < 19.5) return "Kekurangan Oksigen";
     if (oxy <= 23.5) return "Aman";
-    return "Kelebihan Oksigen";
+    if (oxy <= 25) return "Kelebihan Oksigen";
+    return "Overload";
+  };
+
+  // Fungsi untuk menentukan warna berdasarkan kategori
+  const getColor = (oxy) => {
+    if (oxy < 19.5) return ["#FFA500", "#e6e6e6"]; // Orange
+    if (oxy <= 23.5) return ["#32CD32", "#e6e6e6"]; // Hijau
+    if (oxy <= 25) return ["#FFD700", "#e6e6e6"]; // Kuning
+    return ["#FF4500", "#e6e6e6"]; // Merah (Overload)
   };
 
   // Hitung nilai persen untuk GaugeChart
-  const percentValue = (oxygen - 18) / 6; // Asumsi rentang oksigen adalah 18% hingga 24%
+  const percentValue = (oxygen - 18) / 7; // Asumsi rentang oksigen adalah 18% hingga 25%
 
   return (
     <div style={{ width: "200px", margin: "0 auto" }}>
@@ -18,7 +27,7 @@ const OxygenGauge = ({ oxygen }) => {
         id="oxygen-gauge"
         nrOfLevels={100}
         arcsLength={[percentValue, 1 - percentValue]}
-        colors={["#32CD32", "#e6e6e6"]}
+        colors={getColor(oxygen)} // Warna berdasarkan kategori
         percent={percentValue}
         arcPadding={0.01}
         cornerRadius={3}

@@ -7,7 +7,17 @@ const RainfallGauge = ({ rainfall }) => {
     if (rain <= 20) return "Ringan";
     if (rain <= 50) return "Sedang";
     if (rain <= 100) return "Lebat";
-    return "Sangat Lebat";
+    if (rain <= 150) return "Sangat Lebat";
+    return "Overload";
+  };
+
+  // Fungsi untuk menentukan warna berdasarkan kategori
+  const getColor = (rain) => {
+    if (rain <= 20) return ["#00FF00", "#e6e6e6"]; // Hijau
+    if (rain <= 50) return ["#ADFF2F", "#e6e6e6"]; // Hijau Muda
+    if (rain <= 100) return ["#FFD700", "#e6e6e6"]; // Kuning
+    if (rain <= 150) return ["#FFA500", "#e6e6e6"]; // Orange
+    return ["#FF4500", "#e6e6e6"]; // Merah (Overload)
   };
 
   // Hitung nilai persen untuk GaugeChart
@@ -19,7 +29,7 @@ const RainfallGauge = ({ rainfall }) => {
         id="rainfall-gauge"
         nrOfLevels={100}
         arcsLength={[percentValue, 1 - percentValue]}
-        colors={["#1E90FF", "#e6e6e6"]}
+        colors={getColor(rainfall)} // Warna berdasarkan kategori
         percent={percentValue}
         arcPadding={0.01}
         cornerRadius={3}

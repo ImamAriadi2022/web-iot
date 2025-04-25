@@ -15,6 +15,12 @@ const WindDirectionGauge = ({ windDirection }) => {
     return "Utara (U)"; // Jika lebih dari 315°, kembali ke Utara
   };
 
+  // Fungsi untuk menentukan warna berdasarkan arah angin
+  const getColor = (direction) => {
+    const hue = (direction / 360) * 120; // 0° (Hijau) ke 360° (Hijau) melalui 180° (Merah)
+    return `hsl(${hue}, 100%, 50%)`;
+  };
+
   // Hitung nilai persen untuk GaugeChart
   const percentValue = typeof windDirection === "number" ? windDirection / 360 : 0;
 
@@ -24,7 +30,7 @@ const WindDirectionGauge = ({ windDirection }) => {
         id="wind-direction-gauge"
         nrOfLevels={360}
         arcsLength={[percentValue, 1 - percentValue]}
-        colors={["#FFD700", "#e6e6e6"]}
+        colors={[getColor(windDirection), "#e6e6e6"]} // Warna berdasarkan arah angin
         percent={percentValue}
         arcPadding={0.01}
         cornerRadius={3}

@@ -19,6 +19,12 @@ const WindspeedGauge = ({ windspeed }) => {
     return "Topan";
   };
 
+  // Fungsi untuk menentukan warna berdasarkan kecepatan angin
+  const getColor = (speed) => {
+    const hue = 120 - (speed / 120) * 120; // 120° (Hijau) ke 0° (Merah)
+    return `hsl(${hue}, 100%, 50%)`;
+  };
+
   // Hitung nilai persen untuk GaugeChart
   const percentValue = windspeed / 120; // Asumsi nilai maksimum adalah 120 km/h
 
@@ -28,7 +34,7 @@ const WindspeedGauge = ({ windspeed }) => {
         id="windspeed-gauge"
         nrOfLevels={100}
         arcsLength={[percentValue, 1 - percentValue]}
-        colors={["#FF4500", "#e6e6e6"]}
+        colors={[getColor(windspeed), "#e6e6e6"]} // Warna berdasarkan kecepatan angin
         percent={percentValue}
         arcPadding={0.01}
         cornerRadius={3}

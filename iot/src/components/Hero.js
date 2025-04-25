@@ -19,9 +19,9 @@ const Hero = () => {
               <p className="mt-3">
                 Discover the power of real-time climate monitoring and analysis. Our intuitive platform brings together essential environmental data—temperature, humidity, rainfall, wind speed, and more—into one comprehensive system. Whether you're a researcher, policymaker, or environmental enthusiast, this dashboard empowers you to make informed decisions, track trends, and respond swiftly to climate changes. Together, let's embrace innovation for a sustainable future.
               </p>
-              <Button variant="primary" as={Link} to="/dashboard">
+              {/* <Button variant="primary" as={Link} to="/dashboard">
                 Get Started
-              </Button>
+              </Button> */}
             </Slide>
           </Col>
 

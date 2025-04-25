@@ -6,7 +6,16 @@ const AirPressureGauge = ({ airPressure }) => {
   const getCategory = (pressure) => {
     if (pressure < 1000) return "Rendah";
     if (pressure <= 1020) return "Sedang";
-    return "Tinggi";
+    if (pressure <= 1040) return "Tinggi";
+    return "Sangat Tinggi";
+  };
+
+  // Fungsi untuk menentukan warna berdasarkan kategori
+  const getColor = (pressure) => {
+    if (pressure < 1000) return ["#00FF00", "#e6e6e6"]; // Hijau
+    if (pressure <= 1020) return ["#ADFF2F", "#e6e6e6"]; // Hijau Muda
+    if (pressure <= 1040) return ["#FFD700", "#FFA500"]; // Kuning dan Orange
+    return ["#FF4500", "#e6e6e6"]; // Merah
   };
 
   // Hitung nilai persen untuk GaugeChart
@@ -18,7 +27,7 @@ const AirPressureGauge = ({ airPressure }) => {
         id="air-pressure-gauge"
         nrOfLevels={100}
         arcsLength={[percentValue, 1 - percentValue]}
-        colors={["#1E90FF", "#e6e6e6"]}
+        colors={getColor(airPressure)} // Warna berdasarkan kategori
         percent={percentValue}
         arcPadding={0.01}
         cornerRadius={3}

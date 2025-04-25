@@ -10,6 +10,14 @@ const IrradiationGauge = ({ irradiation }) => {
     return "Sangat Tinggi";
   };
 
+  // Fungsi untuk menentukan warna berdasarkan kategori
+  const getColor = (irr) => {
+    if (irr <= 200) return ["#00FF00", "#e6e6e6"]; // Hijau
+    if (irr <= 400) return ["#ADFF2F", "#e6e6e6"]; // Hijau Muda
+    if (irr <= 600) return ["#FFD700", "#e6e6e6"]; // Kuning
+    return ["#FF4500", "#e6e6e6"]; // Orange Merah
+  };
+
   // Hitung nilai persen untuk GaugeChart
   const percentValue = irradiation / 800; // Asumsi nilai maksimum adalah 800 W/m²
 
@@ -19,7 +27,7 @@ const IrradiationGauge = ({ irradiation }) => {
         id="irradiation-gauge"
         nrOfLevels={100}
         arcsLength={[percentValue, 1 - percentValue]}
-        colors={["#FFD700", "#e6e6e6"]}
+        colors={getColor(irradiation)} // Warna berdasarkan kategori
         percent={percentValue}
         arcPadding={0.01}
         cornerRadius={3}

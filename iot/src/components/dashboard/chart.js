@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Dropdown, DropdownButton } from "react-bootstrap";
+import { Row, Col, Modal, Button, ButtonGroup } from "react-bootstrap";
 
 const TrendChart = ({ data }) => {
-  // State untuk menentukan data yang akan ditampilkan di chart
-  const [selectedMetric, setSelectedMetric] = useState("temperature");
+  const [showDetail, setShowDetail] = useState(false);
+  const [selectedMetric, setSelectedMetric] = useState(null);
+  const [interval, setInterval] = useState(15); // Default interval: 15 minutes
 
   // Label untuk setiap metrik
   const metricLabels = {
@@ -15,49 +16,115 @@ const TrendChart = ({ data }) => {
     oxygen: "Oxygen (%)",
     rainfall: "Rainfall (mm)",
     windspeed: "Wind Speed (km/h)",
-    windDirection: "Wind Direction (°)", // Menambahkan Wind Direction
+    windDirection: "Wind Direction (°)",
+    waterTemperature: "Water Temperature (°C)", // Menambahkan Water Temperature
   };
 
-  // Fungsi untuk menangani perubahan metrik
-  const handleMetricChange = (metric) => {
-    setSelectedMetric(metric);
+  // Filter data untuk menampilkan data per hari
+  const filterDataPerDay = (data) => {
+    const filtered = [];
+    const seenDates = new Set();
+
+    data.forEach((item) => {
+      const date = new Date(item.timestamp).toISOString().split("T")[0]; // Ambil tanggal saja
+      if (!seenDates.has(date)) {
+        filtered.push(item);
+        seenDates.add(date);
+      }
+    });
+
+    return filtered;
+  };
+
+  // Filter data berdasarkan interval (15 menit atau 30 menit)
+  const filterDataByInterval = (data, interval) => {
+    const filtered = [];
+    let lastTimestamp = null;
+  
+    data.forEach((item) => {
+      const currentTimestamp = new Date(item.timestamp).getTime();
+  
+      if (!lastTimestamp || currentTimestamp - lastTimestamp >= interval * 60 * 1000) {
+        filtered.push(item);
+        lastTimestamp = currentTimestamp;
+      }
+    });
+  
+    return filtered;
   };
 
   return (
-    <div>
-      <h4 style={{ color: "#007bff", textAlign: "center" }}>Trend Chart</h4>
-
-      {/* Dropdown untuk memilih metrik */}
-      <div className="d-flex justify-content-center mb-3">
-        <DropdownButton
-          id="dropdown-metric-selector"
-          title={`Pilih Chart: ${metricLabels[selectedMetric].split(" ")[0]}`}
-          variant="primary"
-        >
-          {Object.keys(metricLabels).map((metric) => (
-            <Dropdown.Item
-              key={metric}
-              onClick={() => handleMetricChange(metric)}
-              active={selectedMetric === metric}
+    <>
+      <Row>
+        {Object.keys(metricLabels).map((metric) => (
+          <Col md={4} className="mb-4" key={metric}>
+            <div
+              style={{
+                backgroundColor: "#ffffff",
+                padding: "20px",
+                borderRadius: "10px",
+                boxShadow: "0 0 15px rgba(0, 0, 0, 0.1)",
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                setSelectedMetric(metric);
+                setShowDetail(true);
+              }}
             >
-              {metricLabels[metric]}
-            </Dropdown.Item>
-          ))}
-        </DropdownButton>
-      </div>
+              <h5 style={{ color: "#007bff", textAlign: "center" }}>{metricLabels[metric]}</h5>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={filterDataPerDay(data)}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="timestamp" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey={metric} stroke="#007bff" activeDot={{ r: 8 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </Col>
+        ))}
+      </Row>
 
-      {/* Chart */}
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="timestamp" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Line type="monotone" dataKey={selectedMetric} stroke="#007bff" activeDot={{ r: 8 }} />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+      {/* Modal untuk Detail Chart */}
+      <Modal show={showDetail} onHide={() => setShowDetail(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>{selectedMetric ? metricLabels[selectedMetric] : "Detail Chart"}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <ButtonGroup className="mb-3">
+            <Button
+              variant={interval === 15 ? "primary" : "outline-primary"}
+              onClick={() => setInterval(15)}
+            >
+              15 Minutes
+            </Button>
+            <Button
+              variant={interval === 30 ? "primary" : "outline-primary"}
+              onClick={() => setInterval(30)}
+            >
+              30 Minutes
+            </Button>
+          </ButtonGroup>
+          <ResponsiveContainer width="100%" height={500}>
+            <LineChart data={filterDataByInterval(data, interval)}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="timestamp" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey={selectedMetric} stroke="#007bff" activeDot={{ r: 8 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDetail(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
   );
 };
 
