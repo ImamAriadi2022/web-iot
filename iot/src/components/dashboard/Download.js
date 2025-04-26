@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Button, Form } from 'react-bootstrap';
+import { Container, Row, Col, Button, Form, Modal } from 'react-bootstrap';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 
@@ -8,8 +8,15 @@ const Download = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [fileFormat, setFileFormat] = useState('json');
+  const [showLogin, setShowLogin] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleDownload = () => {
+    setShowLogin(true);
+  };
+
+  const processDownload = () => {
     if (!startDate || !endDate) {
       alert('Please select both start date and end date.');
       return;
@@ -33,6 +40,15 @@ const Download = () => {
     }
   };
 
+  const handleLoginSubmit = () => {
+    if (username === 'admin' && password === 'admin123') {
+      setShowLogin(false);
+      processDownload();
+    } else {
+      alert('Invalid credentials! Please use username: admin and password: admin123');
+    }
+  };
+
   const getStationData = () => {
     return selectedStation === 'Station 1' ? station1Data : station2Data;
   };
@@ -46,38 +62,31 @@ const Download = () => {
     });
   };
 
+  const station1Data = [];
+  const startTime = new Date('2025-04-26T00:00:00');
+  for (let i = 0; i < 1440; i++) {
+    const currentTime = new Date(startTime.getTime() + i * 60000);
+    station1Data.push({
+      timestamp: currentTime.toISOString().slice(0, 19),
+      humidity: Math.floor(Math.random() * (70 - 60 + 1)) + 60,
+      temperature: Math.floor(Math.random() * (32 - 26 + 1)) + 26,
+      airPressure: Math.floor(Math.random() * (1015 - 1010 + 1)) + 1010,
+      irradiation: Math.floor(Math.random() * (550 - 480 + 1)) + 480,
+      oxygen: parseFloat((20.6 + Math.random() * 0.5).toFixed(1)),
+      rainfall: Math.floor(Math.random() * 11),
+      windspeed: Math.floor(Math.random() * (16 - 10 + 1)) + 10,
+      windDirection: Math.floor(Math.random() * 360),
+      waterTemperature: parseFloat((24.5 + Math.random() * 2).toFixed(1))
+    });
+  }
 
-  
-  // Data untuk Station 1
- 
-const station1Data = [];
-const startTime = new Date('2025-04-26T00:00:00');
-
-for (let i = 0; i < 1440; i++) {
-  const currentTime = new Date(startTime.getTime() + i * 60000); // setiap 1 menit
-
-  station1Data.push({
-    timestamp: currentTime.toISOString().slice(0, 19),
-    humidity: Math.floor(Math.random() * (70 - 60 + 1)) + 60, // 60-70
-    temperature: Math.floor(Math.random() * (32 - 26 + 1)) + 26, // 26-32
-    airPressure: Math.floor(Math.random() * (1015 - 1010 + 1)) + 1010, // 1010-1015
-    irradiation: Math.floor(Math.random() * (550 - 480 + 1)) + 480, // 480-550
-    oxygen: parseFloat((20.6 + Math.random() * 0.5).toFixed(1)), // 20.6 - 21.1
-    rainfall: Math.floor(Math.random() * 11), // 0-10
-    windspeed: Math.floor(Math.random() * (16 - 10 + 1)) + 10, // 10-16
-    windDirection: Math.floor(Math.random() * 360), // 0-359
-    waterTemperature: parseFloat((24.5 + Math.random() * 2).toFixed(1)) // 24.5 - 26.5
-  });
-}
-
-  // Data untuk Station 2
   const station2Data = [
     { timestamp: '2025-04-01T08:00:00', humidity: 60, temperature: 27, airPressure: 1015, irradiation: 480, oxygen: 20.9, rainfall: 12, windspeed: 13, windDirection: 45 },
     { timestamp: '2025-04-01T09:00:00', humidity: 62, temperature: 28, airPressure: 1014, irradiation: 490, oxygen: 21, rainfall: 10, windspeed: 11, windDirection: 135 },
     { timestamp: '2025-04-01T10:00:00', humidity: 64, temperature: 29, airPressure: 1013, irradiation: 500, oxygen: 20.8, rainfall: 9, windspeed: 12, windDirection: 225 },
     { timestamp: '2025-04-01T11:00:00', humidity: 66, temperature: 30, airPressure: 1012, irradiation: 510, oxygen: 20.7, rainfall: 6, windspeed: 14, windDirection: 315 },
-    // Tambahkan data lainnya...
   ];
+
   return (
     <Container style={{ marginTop: '20px' }}>
       <Row>
@@ -91,14 +100,14 @@ for (let i = 0; i < 1440; i++) {
           <Button
             variant={selectedStation === 'Station 1' ? 'primary' : 'outline-primary'}
             onClick={() => setSelectedStation('Station 1')}
-            className={`me-3 px-4 py-2 fw-bold shadow-sm ${selectedStation === 'Station 1' ? 'active-btn' : ''}`}
+            className="me-3 px-4 py-2 fw-bold shadow-sm"
           >
             Station 1
           </Button>
           <Button
             variant={selectedStation === 'Station 2' ? 'primary' : 'outline-primary'}
             onClick={() => setSelectedStation('Station 2')}
-            className={`px-4 py-2 fw-bold shadow-sm ${selectedStation === 'Station 2' ? 'active-btn' : ''}`}
+            className="px-4 py-2 fw-bold shadow-sm"
           >
             Station 2
           </Button>
@@ -113,7 +122,7 @@ for (let i = 0; i < 1440; i++) {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="form-control-custom shadow-sm"
+              className="shadow-sm"
             />
           </Form.Group>
         </Col>
@@ -124,7 +133,7 @@ for (let i = 0; i < 1440; i++) {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="form-control-custom shadow-sm"
+              className="shadow-sm"
             />
           </Form.Group>
         </Col>
@@ -161,12 +170,46 @@ for (let i = 0; i < 1440; i++) {
           <Button
             variant="success"
             onClick={handleDownload}
-            className="px-5 py-2 fw-bold shadow-lg download-btn"
+            className="px-5 py-2 fw-bold shadow-lg"
           >
             Download Data
           </Button>
         </Col>
       </Row>
+
+      {/* Modal Login */}
+      <Modal show={showLogin} onHide={() => setShowLogin(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Login Required</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group controlId="formUsername" className="mb-3">
+              <Form.Label>Username</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </Form.Group>
+
+            <Form.Group controlId="formPassword" className="mb-3">
+              <Form.Label>Password</Form.Label>
+              <Form.Control
+                type="password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </Form.Group>
+
+            <Button variant="primary" onClick={handleLoginSubmit}>
+              Login
+            </Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
     </Container>
   );
 };
