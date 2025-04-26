@@ -18,7 +18,7 @@ const DashboardSect = () => {
         <Slide direction="up" triggerOnce>
           <div style={{ textAlign: 'center' }}>
             <h1 className="fw-bold" style={{ color: '#007bff' }}>
-              Wellcome to dashboard microclimate Petengoran
+              Wellcome to dashboard microclimate Sebesi
             </h1>
             <p style={{ fontSize: '18px', color: '#6c757d' }}>
               Explore and manage your microclimate data efficiently.

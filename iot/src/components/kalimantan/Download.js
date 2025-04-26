@@ -49,27 +49,14 @@ const Download = () => {
 
   
   // Data untuk Station 1
- 
-const station1Data = [];
-const startTime = new Date('2025-04-26T00:00:00');
-
-for (let i = 0; i < 1440; i++) {
-  const currentTime = new Date(startTime.getTime() + i * 60000); // setiap 1 menit
-
-  station1Data.push({
-    timestamp: currentTime.toISOString().slice(0, 19),
-    humidity: Math.floor(Math.random() * (70 - 60 + 1)) + 60, // 60-70
-    temperature: Math.floor(Math.random() * (32 - 26 + 1)) + 26, // 26-32
-    airPressure: Math.floor(Math.random() * (1015 - 1010 + 1)) + 1010, // 1010-1015
-    irradiation: Math.floor(Math.random() * (550 - 480 + 1)) + 480, // 480-550
-    oxygen: parseFloat((20.6 + Math.random() * 0.5).toFixed(1)), // 20.6 - 21.1
-    rainfall: Math.floor(Math.random() * 11), // 0-10
-    windspeed: Math.floor(Math.random() * (16 - 10 + 1)) + 10, // 10-16
-    windDirection: Math.floor(Math.random() * 360), // 0-359
-    waterTemperature: parseFloat((24.5 + Math.random() * 2).toFixed(1)) // 24.5 - 26.5
-  });
-}
-
+  const station1Data = [
+    { timestamp: '2025-04-01T08:00:00', humidity: 65, temperature: 28, airPressure: 1012, irradiation: 500, oxygen: 21, rainfall: 10, windspeed: 15, windDirection: 90 },
+    { timestamp: '2025-04-01T09:00:00', humidity: 67, temperature: 29, airPressure: 1013, irradiation: 520, oxygen: 20.8, rainfall: 8, windspeed: 12, windDirection: 180 },
+    { timestamp: '2025-04-01T10:00:00', humidity: 70, temperature: 30, airPressure: 1011, irradiation: 530, oxygen: 20.7, rainfall: 5, windspeed: 10, windDirection: 270 },
+    { timestamp: '2025-04-01T11:00:00', humidity: 68, temperature: 31, airPressure: 1010, irradiation: 540, oxygen: 20.6, rainfall: 7, windspeed: 14, windDirection: 360 },
+    // Tambahkan data lainnya...
+  ];
+  
   // Data untuk Station 2
   const station2Data = [
     { timestamp: '2025-04-01T08:00:00', humidity: 60, temperature: 27, airPressure: 1015, irradiation: 480, oxygen: 20.9, rainfall: 12, windspeed: 13, windDirection: 45 },

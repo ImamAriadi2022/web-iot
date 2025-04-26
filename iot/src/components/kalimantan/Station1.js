@@ -16,8 +16,6 @@ import RainfallGauge from './status/Rainfall';
 import WindDirectionGauge from './status/WindDirection';
 import WaterTemperatureGauge from './status/WaterTemperature'
 
-
-
 // ini buat data 24 jam
 const allData = [];
 const startTime = new Date('2025-04-26T00:00:00');
@@ -38,9 +36,6 @@ for (let i = 0; i < 1440; i++) {
     waterTemperature: parseFloat((24.5 + Math.random() * 2).toFixed(1)) // 24.5 - 26.5
   });
 }
-
-console.log(allData);
-
 
 const Station1 = () => {
   const [filter, setFilter] = useState('1d');

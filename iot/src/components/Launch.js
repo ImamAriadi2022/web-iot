@@ -14,11 +14,19 @@ const Launch = () => {
               <h4>Launch Now!</h4>
               <h2 className="fw-bold mt-3">Dashboard Microclimate</h2>
               <p className="mt-3">
-                To access the full data of the microclimate device, please access the link below
+                To access the full data of the microclimate device, please access the links below:
               </p>
-              <Button variant="primary" className="mt-3" href="/dashboard">
-                Dashboard <FaArrowRight />
-              </Button>
+              <div className="mt-3">
+                <Button variant="primary" className="me-2 mb-2" href="/dashboard">
+                  Petengoran <FaArrowRight />
+                </Button>
+                <Button variant="success" className="me-2 mb-2" href="/kalimantan">
+                  Kalimantan <FaArrowRight />
+                </Button>
+                <Button variant="warning" className="mb-2" href="/sebesi">
+                  Sebesi <FaArrowRight />
+                </Button>
+              </div>
             </Slide>
           </Col>
 

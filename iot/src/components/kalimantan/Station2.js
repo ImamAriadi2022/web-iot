@@ -16,8 +16,6 @@ import RainfallGauge from './status/Rainfall';
 import WindDirectionGauge from './status/WindDirection';
 import WaterTemperatureGauge from './status/WaterTemperature'
 
-
-
 // ini buat data 24 jam
 const allData = [];
 const startTime = new Date('2025-04-26T00:00:00');
@@ -39,10 +37,7 @@ for (let i = 0; i < 1440; i++) {
   });
 }
 
-console.log(allData);
-
-
-const Station1 = () => {
+const Station2 = () => {
   const [filter, setFilter] = useState('1d');
   // const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -146,7 +141,7 @@ const Station1 = () => {
         <Row className="mb-5">
           <Col>
             <h2 className="text-center" style={{ color: '#007bff' }}>Environment Status</h2>
-            <p className="text-center">Data collected from the station 1</p>
+            <p className="text-center">Data collected from the station 2</p>
           </Col>
         </Row>
         
@@ -309,4 +304,4 @@ const Station1 = () => {
   );
 };
 
-export default Station1;
+export default Station2;
