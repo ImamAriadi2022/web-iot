@@ -17,9 +17,10 @@ import WindDirectionGauge from './status/WindDirection';
 import WaterTemperatureGauge from './status/WaterTemperature'
 
 
+
 // ini buat data 24 jam
 const allData = [];
-const startTime = new Date('2025-04-26T00:00:00');
+const startTime = new Date('2025-05-23T00:00:00');
 
 for (let i = 0; i < 1440; i++) {
   const currentTime = new Date(startTime.getTime() + i * 60000); // setiap 1 menit
@@ -37,6 +38,9 @@ for (let i = 0; i < 1440; i++) {
     waterTemperature: parseFloat((24.5 + Math.random() * 2).toFixed(1)) // 24.5 - 26.5
   });
 }
+
+console.log(allData);
+
 
 const Station2 = () => {
   const [filter, setFilter] = useState('1d');
@@ -142,7 +146,7 @@ const Station2 = () => {
         <Row className="mb-5">
           <Col>
             <h2 className="text-center" style={{ color: '#007bff' }}>Environment Status</h2>
-            <p className="text-center">Data collected from the station 2</p>
+            <p className="text-center">Data collected from the station 1</p>
           </Col>
         </Row>
         
