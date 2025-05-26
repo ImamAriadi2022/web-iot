@@ -2,24 +2,24 @@ import React from "react";
 import GaugeChart from "react-gauge-chart";
 
 const IrradiationGauge = ({ irradiation }) => {
-  // Fungsi untuk menentukan kategori berdasarkan radiasi
+  // Function to determine category based on irradiation
   const getCategory = (irr) => {
-    if (irr <= 200) return "Rendah";
-    if (irr <= 400) return "Sedang";
-    if (irr <= 600) return "Tinggi";
-    return "Sangat Tinggi";
+    if (irr <= 200) return "Low";
+    if (irr <= 400) return "Moderate";
+    if (irr <= 600) return "High";
+    return "Very High";
   };
 
-  // Fungsi untuk menentukan warna berdasarkan kategori
+  // Function to determine color based on category
   const getColor = (irr) => {
-    if (irr <= 200) return ["#00FF00", "#e6e6e6"]; // Hijau
-    if (irr <= 400) return ["#ADFF2F", "#e6e6e6"]; // Hijau Muda
-    if (irr <= 600) return ["#FFD700", "#e6e6e6"]; // Kuning
-    return ["#FF4500", "#e6e6e6"]; // Orange Merah
+    if (irr <= 200) return ["#00FF00", "#e6e6e6"]; // Green
+    if (irr <= 400) return ["#ADFF2F", "#e6e6e6"]; // Light Green
+    if (irr <= 600) return ["#FFD700", "#e6e6e6"]; // Yellow
+    return ["#FF4500", "#e6e6e6"]; // Orange Red
   };
 
-  // Hitung nilai persen untuk GaugeChart
-  const percentValue = irradiation / 800; // Asumsi nilai maksimum adalah 800 W/m²
+  // Calculate percent value for GaugeChart
+  const percentValue = irradiation / 800; // Assume max value is 800 W/m²
 
   return (
     <div style={{ width: "200px", margin: "0 auto" }}>
@@ -27,7 +27,7 @@ const IrradiationGauge = ({ irradiation }) => {
         id="irradiation-gauge"
         nrOfLevels={100}
         arcsLength={[percentValue, 1 - percentValue]}
-        colors={getColor(irradiation)} // Warna berdasarkan kategori
+        colors={getColor(irradiation)} // Color based on category
         percent={percentValue}
         arcPadding={0.01}
         cornerRadius={3}

@@ -2,23 +2,23 @@ import React from "react";
 import GaugeChart from "react-gauge-chart";
 
 const AirPressureGauge = ({ airPressure }) => {
-  // Fungsi untuk menentukan kategori berdasarkan tekanan udara
+  // Function to determine category based on air pressure
   const getCategory = (pressure) => {
-    if (pressure < 1000) return "Rendah";
-    if (pressure <= 1020) return "Sedang";
-    if (pressure <= 1040) return "Tinggi";
-    return "Sangat Tinggi";
+    if (pressure < 1000) return "Low";
+    if (pressure <= 1020) return "Normal";
+    if (pressure <= 1040) return "High";
+    return "Very High";
   };
 
-  // Fungsi untuk menentukan warna berdasarkan kategori
+  // Function to determine color based on category
   const getColor = (pressure) => {
-    if (pressure < 1000) return ["#00FF00", "#e6e6e6"]; // Hijau
-    if (pressure <= 1020) return ["#ADFF2F", "#e6e6e6"]; // Hijau Muda
-    if (pressure <= 1040) return ["#FFD700", "#FFA500"]; // Kuning dan Orange
-    return ["#FF4500", "#e6e6e6"]; // Merah
+    if (pressure < 1000) return ["#00FF00", "#e6e6e6"]; // Green
+    if (pressure <= 1020) return ["#ADFF2F", "#e6e6e6"]; // Light Green
+    if (pressure <= 1040) return ["#FFD700", "#FFA500"]; // Yellow and Orange
+    return ["#FF4500", "#e6e6e6"]; // Red
   };
 
-  // Hitung nilai persen untuk GaugeChart
+  // Calculate percent value for GaugeChart
   const percentValue = (airPressure - 950) / 120;
 
   return (
@@ -27,7 +27,7 @@ const AirPressureGauge = ({ airPressure }) => {
         id="air-pressure-gauge"
         nrOfLevels={100}
         arcsLength={[percentValue, 1 - percentValue]}
-        colors={getColor(airPressure)} // Warna berdasarkan kategori
+        colors={getColor(airPressure)} // Color based on category
         percent={percentValue}
         arcPadding={0.01}
         cornerRadius={3}

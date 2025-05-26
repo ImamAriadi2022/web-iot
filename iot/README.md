@@ -68,3 +68,42 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+
+
+
+<!-- Sebesi
+Humadity = Humadity
+Temparature = Temparature
+Air pressure = Air Pressure
+Wind Speed = anemometer
+Irradiation = Sollar radiation
+Oxygen = Water_temparature_atas
+Rainfall = Rainfall
+Wind Direction = Angel
+Water Temparature = Water temparature bawah
+
+  -->
+
+
+  <!-- Kalimatan station 1
+  yang gak ada oksigen, airpresurre, water temparute
+   -->
+
+   <!-- kalimantan station 2
+   
+   masih eror, keluarkan output eror
+
+
+
+
+   petanggoran station 1
+    iraadiation gak ada sama oxygen
+
+
+    petangoran station 2
+   pyrano = iradiation, gak ada oksigen dan temparute ada 2 
+   oksigen dihapus, water termparatur jadi tempartatur 2
+    -->
+
+

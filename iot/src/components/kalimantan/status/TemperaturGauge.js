@@ -2,28 +2,28 @@ import React from "react";
 import GaugeChart from "react-gauge-chart";
 
 const TemperatureGauge = ({ temperature }) => {
-  // Fungsi untuk menentukan kategori berdasarkan suhu
+  // Function to determine category based on temperature
   const getCategory = (temp) => {
-    if (temp < 15) return "Dingin";
-    if (temp < 20) return "Sejuk";
-    if (temp < 25) return "Nyaman";
-    if (temp < 30) return "Hangat";
-    if (temp < 35) return "Panas";
-    return "Sangat Panas";
+    if (temp < 15) return "Cold";
+    if (temp < 20) return "Cool";
+    if (temp < 25) return "Comfortable";
+    if (temp < 30) return "Warm";
+    if (temp < 35) return "Hot";
+    return "Very Hot";
   };
 
-  // Fungsi untuk menentukan warna berdasarkan kategori
+  // Function to determine color based on category
   const getColor = (temp) => {
-    if (temp < 15) return ["#0000FF", "#e6e6e6"]; // Biru
-    if (temp < 20) return ["#87CEEB", "#e6e6e6"]; // Biru Muda
-    if (temp < 25) return ["#00FF00", "#e6e6e6"]; // Hijau
-    if (temp < 30) return ["#FFD700", "#e6e6e6"]; // Kuning
+    if (temp < 15) return ["#0000FF", "#e6e6e6"]; // Blue
+    if (temp < 20) return ["#87CEEB", "#e6e6e6"]; // Light Blue
+    if (temp < 25) return ["#00FF00", "#e6e6e6"]; // Green
+    if (temp < 30) return ["#FFD700", "#e6e6e6"]; // Yellow
     if (temp < 35) return ["#FFA500", "#e6e6e6"]; // Orange
-    return ["#FF4500", "#e6e6e6"]; // Merah
+    return ["#FF4500", "#e6e6e6"]; // Red
   };
 
-  // Hitung nilai persen untuk GaugeChart
-  const percentValue = (temperature - 10) / 30; // Asumsi rentang suhu adalah 10°C hingga 40°C
+  // Calculate percent value for GaugeChart
+  const percentValue = (temperature - 10) / 30; // Assume temperature range is 10°C to 40°C
 
   return (
     <div style={{ width: "200px", margin: "0 auto" }}>
@@ -31,7 +31,7 @@ const TemperatureGauge = ({ temperature }) => {
         id="temperature-gauge"
         nrOfLevels={100}
         arcsLength={[percentValue, 1 - percentValue]}
-        colors={getColor(temperature)} // Warna berdasarkan kategori
+        colors={getColor(temperature)} // Color based on category
         percent={percentValue}
         arcPadding={0.01}
         cornerRadius={3}

@@ -2,26 +2,26 @@ import React from "react";
 import GaugeChart from "react-gauge-chart";
 
 const WindDirectionGauge = ({ windDirection }) => {
-  // Fungsi untuk menentukan kategori berdasarkan arah angin
+  // Function to determine category based on wind direction
   const getCategory = (direction) => {
-    if (direction === 0) return "Utara (U)";
-    if (direction > 0 && direction <= 45) return "Timur Laut (TL)";
-    if (direction > 45 && direction <= 90) return "Timur (T)";
-    if (direction > 90 && direction <= 135) return "Tenggara (TG)";
-    if (direction > 135 && direction <= 180) return "Selatan (S)";
-    if (direction > 180 && direction <= 225) return "Barat Daya (BD)";
-    if (direction > 225 && direction <= 270) return "Barat (B)";
-    if (direction > 270 && direction <= 315) return "Barat Laut (BL)";
-    return "Utara (U)"; // Jika lebih dari 315°, kembali ke Utara
+    if (direction === 0) return "North (N)";
+    if (direction > 0 && direction <= 45) return "Northeast (NE)";
+    if (direction > 45 && direction <= 90) return "East (E)";
+    if (direction > 90 && direction <= 135) return "Southeast (SE)";
+    if (direction > 135 && direction <= 180) return "South (S)";
+    if (direction > 180 && direction <= 225) return "Southwest (SW)";
+    if (direction > 225 && direction <= 270) return "West (W)";
+    if (direction > 270 && direction <= 315) return "Northwest (NW)";
+    return "North (N)"; // If more than 315°, back to North
   };
 
-  // Fungsi untuk menentukan warna berdasarkan arah angin
+  // Function to determine color based on wind direction
   const getColor = (direction) => {
-    const hue = (direction / 360) * 120; // 0° (Hijau) ke 360° (Hijau) melalui 180° (Merah)
+    const hue = (direction / 360) * 120; // 0° (Green) to 360° (Green) via 180° (Red)
     return `hsl(${hue}, 100%, 50%)`;
   };
 
-  // Hitung nilai persen untuk GaugeChart
+  // Calculate percent value for GaugeChart
   const percentValue = typeof windDirection === "number" ? windDirection / 360 : 0;
 
   return (
@@ -30,7 +30,7 @@ const WindDirectionGauge = ({ windDirection }) => {
         id="wind-direction-gauge"
         nrOfLevels={360}
         arcsLength={[percentValue, 1 - percentValue]}
-        colors={[getColor(windDirection), "#e6e6e6"]} // Warna berdasarkan arah angin
+        colors={[getColor(windDirection), "#e6e6e6"]} // Color based on wind direction
         percent={percentValue}
         arcPadding={0.01}
         cornerRadius={3}
@@ -42,7 +42,7 @@ const WindDirectionGauge = ({ windDirection }) => {
         }
       />
       <p style={{ textAlign: "center", marginTop: "-10px", fontWeight: "bold" }}>
-        {typeof windDirection === "number" ? getCategory(windDirection) : "Data Tidak Valid"}
+        {typeof windDirection === "number" ? getCategory(windDirection) : "Invalid Data"}
       </p>
     </div>
   );
