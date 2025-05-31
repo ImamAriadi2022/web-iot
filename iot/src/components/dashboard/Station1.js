@@ -8,8 +8,6 @@ import TemperatureGauge from './status/TemperaturGauge';
 import HumidityGauge from './status/HumidityGauge';
 import AirPressureGauge from './status/AirPressure';
 import WindSpeedGauge from './status/WindSpeed';
-import IrradiationGauge from './status/Irradiation';
-import OxygenGauge from './status/Oxygen';
 import RainfallGauge from './status/Rainfall';
 import WindDirectionGauge from './status/WindDirection';
 import WaterTemperatureGauge from './status/WaterTemperature';
@@ -20,8 +18,6 @@ const FIELD_CONFIG = [
   { key: 'temperature', label: 'Temperature', unit: '°C', gauge: TemperatureGauge },
   { key: 'airPressure', label: 'Air Pressure', unit: 'hPa', gauge: AirPressureGauge },
   { key: 'windspeed', label: 'Windspeed', unit: 'km/h', gauge: WindSpeedGauge },
-  { key: 'irradiation', label: 'Irradiation', unit: 'W/m²', gauge: IrradiationGauge },
-  { key: 'oxygen', label: 'Oxygen', unit: '%', gauge: OxygenGauge },
   { key: 'rainfall', label: 'Rainfall', unit: 'mm', gauge: RainfallGauge },
   { key: 'windDirection', label: 'Wind Direction', unit: '°', gauge: WindDirectionGauge },
   { key: 'waterTemperature', label: 'Water Temperature', unit: '°C', gauge: WaterTemperatureGauge },
@@ -30,26 +26,100 @@ const FIELD_CONFIG = [
 // API endpoint dari .env
 const API_URL = process.env.REACT_APP_API_PETENGORAN_GET_TOPIC4;
 
+// Helper untuk mapping key dari API ke key frontend
+function mapApiData(apiItem) {
+  return {
+    timestamp: apiItem.timestamp,
+    humidity: apiItem.humidity,
+    temperature: apiItem.temperature,
+    airPressure: apiItem.AirPressure,
+    windspeed: apiItem.windSpeed,
+    rainfall: apiItem.rainfall,
+    windDirection: apiItem.angle,
+    waterTemperature: apiItem.suhuAir,
+    // tambahkan mapping lain jika perlu
+  };
+}
+
+// Helper untuk parsing tanggal dari format "DD-MM-YY HH:mm:ss"
+function parseCustomDate(str) {
+  if (!str) return new Date('Invalid');
+  const [datePart, timePart] = str.split(' ');
+  if (!datePart || !timePart) return new Date('Invalid');
+  const [day, month, year] = datePart.split('-');
+  if (!day || !month || !year) return new Date('Invalid');
+  const fullYear = Number(year) < 100 ? 2000 + Number(year) : Number(year);
+  // Pastikan bulan dan hari dua digit
+  const mm = month.padStart(2, '0');
+  const dd = day.padStart(2, '0');
+  return new Date(`${fullYear}-${mm}-${dd}T${timePart}`);
+}
+
+const LOCAL_STORAGE_KEY = "station1_data";
+
 const Station1 = () => {
   const [filter, setFilter] = useState('1d');
   const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
 
-  // Fetch data dari API Petengoran Topic 4
+  // Load data dari localStorage saat pertama kali mount
+  useEffect(() => {
+    const local = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        setAllData(parsed);
+      } catch (e) {
+        setAllData([]);
+      }
+    }
+  }, []);
+
+  // Fetch data dari API setiap 10 detik
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(API_URL);
         const json = await response.json();
-        // Pastikan data berupa array
-        const result = Array.isArray(json.result) ? json.result : [];
-        setAllData(result);
+        console.log("API Response:", JSON.stringify(json, null, 2)); // Log response API
+
+        // Perbaikan: jika response langsung array
+        const result = Array.isArray(json) ? json : (Array.isArray(json.result) ? json.result : []);
+        const mapped = result.map(mapApiData);
+
+        let local = [];
+        try {
+          local = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [];
+        } catch (e) {
+          local = [];
+        }
+
+        const timestamps = new Set(local.map(item => item.timestamp));
+        const combined = [...local];
+        mapped.forEach(item => {
+          if (!timestamps.has(item.timestamp)) {
+            combined.push(item);
+            timestamps.add(item.timestamp);
+            console.log("New data added to localStorage:", item);
+          }
+        });
+
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(combined));
+        setAllData(combined);
       } catch (error) {
-        setAllData([]);
+        console.error("Fetch error:", error);
       }
     };
+
     fetchData();
+    const interval = setInterval(fetchData, 10000); // 10 detik
+    return () => clearInterval(interval);
   }, []);
+
+  // Log perubahan allData
+  useEffect(() => {
+    console.log("allData state updated:", allData);
+  }, [allData]);
 
   // Fungsi untuk memfilter data berdasarkan waktu
   const handleFilterChange = (filterType) => {
@@ -58,9 +128,15 @@ const Station1 = () => {
     const now = new Date();
     let filtered = [];
 
+    // Hanya proses data dengan timestamp valid
+    const validData = allData.filter(item => {
+      const d = parseCustomDate(item.timestamp);
+      return d instanceof Date && !isNaN(d);
+    });
+
     if (filterType === '1d') {
-      filtered = allData.filter((item) => {
-        const itemDate = new Date(item.timestamp);
+      filtered = validData.filter((item) => {
+        const itemDate = parseCustomDate(item.timestamp);
         return (
           itemDate.getFullYear() === now.getFullYear() &&
           itemDate.getMonth() === now.getMonth() &&
@@ -71,22 +147,27 @@ const Station1 = () => {
     } else if (filterType === '7d') {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(now.getDate() - 7);
-      filtered = allData.filter((item) => {
-        const itemDate = new Date(item.timestamp);
+      filtered = validData.filter((item) => {
+        const itemDate = parseCustomDate(item.timestamp);
         return itemDate >= sevenDaysAgo && itemDate <= now;
       });
     } else if (filterType === '1m') {
       const oneMonthAgo = new Date();
       oneMonthAgo.setMonth(now.getMonth() - 1);
-      filtered = allData.filter((item) => {
-        const itemDate = new Date(item.timestamp);
+      filtered = validData.filter((item) => {
+        const itemDate = parseCustomDate(item.timestamp);
         return itemDate >= oneMonthAgo && itemDate <= now;
       });
     }
 
-    filtered.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    filtered.sort((a, b) => parseCustomDate(a.timestamp) - parseCustomDate(b.timestamp));
     setFilteredData(filtered);
   };
+
+  // Log perubahan filter
+  useEffect(() => {
+    console.log("filter state updated:", filter);
+  }, [filter]);
 
   // Jalankan filter default (1 hari terakhir) saat komponen pertama kali dimuat atau data berubah
   useEffect(() => {
@@ -94,8 +175,19 @@ const Station1 = () => {
     // eslint-disable-next-line
   }, [allData]);
 
+  // Log perubahan filteredData
+  useEffect(() => {
+    console.log("filteredData state updated:", filteredData);
+  }, [filteredData]);
+
   // Ambil data terbaru (last item)
   const latest = filteredData.length > 0 ? filteredData[filteredData.length - 1] : {};
+
+  // Filter data valid untuk chart (hindari error TrendChart)
+  const validChartData = filteredData.filter(item => {
+    const d = parseCustomDate(item.timestamp);
+    return d instanceof Date && !isNaN(d);
+  });
 
   return (
     <section
@@ -163,7 +255,7 @@ const Station1 = () => {
           </ButtonGroup>
           <Col md={12}>
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
-              <TrendChart data={filteredData} />
+              <TrendChart data={validChartData} />
             </div>
           </Col>
 
