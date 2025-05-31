@@ -11,7 +11,16 @@ import WindSpeedGauge from './status/WindSpeed';
 import IrradiationGauge from './status/Irradiation';
 import WindDirectionGauge from './status/WindDirection';
 
-// ...existing code...
+const getOneDataPerDay = (data) => {
+  const map = {};
+  data.forEach(item => {
+    const date = item.timestamp ? item.timestamp.slice(0,10) : '';
+    if (date) map[date] = item;
+  });
+  return Object.values(map).sort((a,b) => a.timestamp.localeCompare(b.timestamp));
+};
+
+// Fungsi mapping arah angin Indonesia ke Inggris
 const windDirectionToEnglish = (dir) => {
   if (!dir) return '';
   const map = {
@@ -48,7 +57,6 @@ const windDirectionToEnglish = (dir) => {
   };
   return map[dir] || dir;
 };
-// ...existing code...
 
 // Fungsi untuk parsing timestamp dari backend ke format ISO (agar bisa dipakai new Date())
 const parseTimestamp = (ts) => {
@@ -109,6 +117,7 @@ const Station1 = () => {
   const [filter, setFilter] = useState('1d');
   const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [tableData, setTableData] = useState([]);
 
   // Fetch data dari API sesuai filter
   const fetchData = async (filterType) => {
@@ -137,7 +146,14 @@ const Station1 = () => {
 
   useEffect(() => {
     setFilteredData(allData);
-  }, [allData]);
+    if (filter === '7d' || filter === '1m') {
+      setTableData(getOneDataPerDay(allData));
+    } else {
+      setTableData(allData);
+    }
+  }, [allData, filter]);
+
+    console.log("filteredData:", filteredData);
 
   return (
     <section
@@ -206,17 +222,71 @@ const Station1 = () => {
           </Col>
         </Row>
 
-        {/* Chart section dihilangkan jika tidak diperlukan */}
+        {/* Tombol filter */}
+        <Row className="mt-5 mb-3">
+          <Col className="text-center">
+            <ButtonGroup>
+              <Button
+                variant={filter === '1d' ? 'primary' : 'outline-primary'}
+                onClick={() => handleFilterChange('1d')}
+              >
+                1 Hari Terakhir
+              </Button>
+              <Button
+                variant={filter === '7d' ? 'primary' : 'outline-primary'}
+                onClick={() => handleFilterChange('7d')}
+              >
+                7 Hari Terakhir
+              </Button>
+              <Button
+                variant={filter === '1m' ? 'primary' : 'outline-primary'}
+                onClick={() => handleFilterChange('1m')}
+              >
+                1 Bulan Terakhir
+              </Button>
+            </ButtonGroup>
+          </Col>
+        </Row>
+
+
+{/* chart 6 data utama */}
+         <Row>
+          <Col>
+            <h2 className="text-center" style={{ color: '#007bff' }}>Chart Status</h2>
+          </Col>
+        </Row>
+
+            <Row>
+          <Col>
+            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
+                <TrendChart
+                  data={filteredData}
+                  fields={[
+                    { key: 'humidity', label: 'Humidity (%)' },
+                    { key: 'temperature', label: 'Temperature (°C)' },
+                    { key: 'rainfall', label: 'Rainfall (mm)' },
+                    { key: 'windspeed', label: 'Wind Speed (km/h)' },
+                    { key: 'irradiation', label: 'Irradiation (W/m²)' },
+                    { key: 'angle', label: 'Wind Direction (°)' }
+                  ]}
+                />
+            </div>
+          </Col>
+        </Row>
+
+
+
+        {/* ini buat tabel nya */}
 
         <Row className="mt-5">
           <Col>
             <h2 className="text-center" style={{ color: '#007bff' }}>Table Status</h2>
           </Col>
         </Row>
-        <Row>
+    <Row>
           <Col>
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)', overflowX: 'auto' }}>
-              {filteredData.length > 0 ? (
+              {tableData.length > 0 ? (
                 <Table striped bordered hover variant="light" style={{ marginBottom: 0 }}>
                   <thead>
                     <tr>
@@ -230,7 +300,7 @@ const Station1 = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredData.map((item, index) => (
+                    {tableData.map((item, index) => (
                       <tr key={index}>
                         <td>{item.timestamp}</td>
                         <td>{item.humidity}</td>
@@ -249,6 +319,7 @@ const Station1 = () => {
             </div>
           </Col>
         </Row>
+
       </Container>
     </section>
   );

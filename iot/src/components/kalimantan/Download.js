@@ -1,7 +1,103 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, Modal } from 'react-bootstrap';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
+
+// API endpoint untuk Station 1 & 2 (ambil dari .env, sama seperti Station1.js & Station2.js)
+const API_KALIMANTAN_TOPIC1 = process.env.REACT_APP_API_KALIMANTAN_TABLE_TOPIC1;
+const API_KALIMANTAN_TOPIC2 = process.env.REACT_APP_API_KALIMANTAN_TABLE_TOPIC2;
+
+// Fungsi parsing timestamp agar bisa dibandingkan dengan filter tanggal
+const parseTimestamp = (ts) => {
+  // Format backend: '28-05-25 11:49:00' (DD-MM-YY HH:mm:ss)
+  if (!ts || typeof ts !== 'string') return ts;
+  const [date, time] = ts.split(' ');
+  if (!date || !time) return ts;
+  const [day, month, year] = date.split('-');
+  if (!day || !month || !year) return ts;
+  const fullYear = year.length === 2 ? '20' + year : year;
+  // Format ISO agar bisa diparse oleh new Date()
+  return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${time}`;
+};
+
+const windDirectionToEnglish = (dir) => {
+  if (!dir) return '';
+  const map = {
+    'Utara': 'North',
+    'Timur Laut': 'Northeast',
+    'Timur': 'East',
+    'Timur Timur Laut': 'East-Northeast',
+    'Barat Laut': 'Northwest',
+    'Barat': 'West',
+    'Barat Daya': 'Southwest',
+    'Selatan': 'South',
+    'Tenggara': 'Southeast',
+    'Timur Selatan': 'East-Southeast',
+    'Barat Barat Laut': 'West-Northwest',
+    'Barat Barat Daya': 'West-Southwest',
+    'Selatan Barat Daya': 'South-Southwest',
+    'Selatan Tenggara': 'South-Southeast',
+    'Timur Timur Selatan': 'East-Southeast',
+    'Timur Tenggara': 'East-Southeast',
+    'North': 'North',
+    'South': 'South',
+    'East': 'East',
+    'West': 'West',
+    'Northeast': 'Northeast',
+    'Northwest': 'Northwest',
+    'Southeast': 'Southeast',
+    'Southwest': 'Southwest',
+    'East-Northeast': 'East-Northeast',
+    'East-Southeast': 'East-Southeast',
+    'West-Northwest': 'West-Northwest',
+    'West-Southwest': 'West-Southwest',
+    'South-Southwest': 'South-Southwest',
+    'South-Southeast': 'South-Southeast',
+  };
+  return map[dir] || dir;
+};
+
+const mapStation1 = (item) => {
+  if (!item) return {};
+  // Jika timestamp invalid atau alat rusak, return flag khusus
+  if (
+    !item.timestamp ||
+    item.timestamp === 'Invalid date' ||
+    item.timestamp === 'alat rusak'
+  ) {
+    return { ...item, invalid: true };
+  }
+  const ts = item.timestamp;
+  return {
+    timestamp: parseTimestamp(ts),
+    humidity: item.humidity ?? item.hum_dht22 ?? 0,
+    temperature: item.temperature ?? item.temp_dht22 ?? 0,
+    rainfall: item.rainfall ?? 0,
+    windspeed: item.wind_speed ?? 0,
+    irradiation: item.irradiation ?? 0,
+    windDirection: windDirectionToEnglish(item.direction ?? ''),
+    angle: item.angle ?? 0,
+    invalid: false,
+  };
+};
+
+const mapStation2 = (item) => {
+  if (!item) return {};
+  if (
+    !item.timestamp ||
+    item.timestamp === 'Invalid date' ||
+    item.timestamp === 'alat rusak'
+  ) {
+    return { ...item, invalid: true };
+  }
+  const ts = item.timestamp;
+  return {
+    timestamp: parseTimestamp(ts),
+    humidity: item.humidity ?? item.hum_dht22 ?? 0,
+    temperature: item.temperature ?? item.temp_dht22 ?? 0,
+    invalid: false,
+  };
+};
 
 const Download = () => {
   const [selectedStation, setSelectedStation] = useState('Station 1');
@@ -11,6 +107,43 @@ const Download = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [station1Data, setStation1Data] = useState([]);
+  const [station2Data, setStation2Data] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch data dari API saat komponen mount
+  useEffect(() => {
+    const fetchStation1 = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(API_KALIMANTAN_TOPIC1);
+        const json = await res.json();
+        console.log("respon api kalimatantan download :", json);
+        const data = Array.isArray(json.result) ? json.result.map(mapStation1) : [];
+        setStation1Data(data);
+      } catch {
+        setStation1Data([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    const fetchStation2 = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(API_KALIMANTAN_TOPIC2);
+        const json = await res.json();
+        console.log("respon api kalimatantan download :", json);
+        const data = Array.isArray(json.result) ? json.result.map(mapStation2) : [];
+        setStation2Data(data);
+      } catch {
+        setStation2Data([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStation1();
+    fetchStation2();
+  }, []);
 
   const handleDownload = () => {
     setShowLogin(true);
@@ -21,22 +154,30 @@ const Download = () => {
       alert('Please select both start date and end date.');
       return;
     }
-
     const data = filterDataByDate(getStationData());
-
+    // Cek jika ada data invalid
+    const hasInvalid = data.some(
+      (item) =>
+        item.invalid ||
+        item.timestamp === 'Invalid date' ||
+        item.timestamp === 'alat rusak'
+    );
+    if (hasInvalid) {
+      alert('Data tidak bisa di-download karena respon dari server tertulis alat rusak atau Invalid date.');
+      return;
+    }
     if (data.length === 0) {
       alert('No data available for the selected date range.');
       return;
     }
-
     if (fileFormat === 'json') {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      saveAs(blob, `${selectedStation}_data.json`);
+      saveAs(blob, `${selectedStation.replace(' ', '_')}_data.json`);
     } else if (fileFormat === 'csv') {
       const worksheet = XLSX.utils.json_to_sheet(data);
       const csv = XLSX.utils.sheet_to_csv(worksheet);
       const blob = new Blob([csv], { type: 'text/csv' });
-      saveAs(blob, `${selectedStation}_data.csv`);
+      saveAs(blob, `${selectedStation.replace(' ', '_')}_data.csv`);
     }
   };
 
@@ -45,7 +186,7 @@ const Download = () => {
       setShowLogin(false);
       processDownload();
     } else {
-      alert('Invalid credentials! Please use username: admin and password: admin123');
+      alert('Invalid credentials!');
     }
   };
 
@@ -54,38 +195,15 @@ const Download = () => {
   };
 
   const filterDataByDate = (data) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    // Pastikan tanggal diubah ke format yang bisa dibandingkan
+    if (!startDate || !endDate) return [];
+    const start = new Date(`${startDate}T00:00:00`);
+    const end = new Date(`${endDate}T23:59:59`);
     return data.filter((item) => {
       const itemDate = new Date(item.timestamp);
       return itemDate >= start && itemDate <= end;
     });
   };
-
-  const station1Data = [];
-  const startTime = new Date('2025-04-26T00:00:00');
-  for (let i = 0; i < 1440; i++) {
-    const currentTime = new Date(startTime.getTime() + i * 60000);
-    station1Data.push({
-      timestamp: currentTime.toISOString().slice(0, 19),
-      humidity: Math.floor(Math.random() * (70 - 60 + 1)) + 60,
-      temperature: Math.floor(Math.random() * (32 - 26 + 1)) + 26,
-      airPressure: Math.floor(Math.random() * (1015 - 1010 + 1)) + 1010,
-      irradiation: Math.floor(Math.random() * (550 - 480 + 1)) + 480,
-      oxygen: parseFloat((20.6 + Math.random() * 0.5).toFixed(1)),
-      rainfall: Math.floor(Math.random() * 11),
-      windspeed: Math.floor(Math.random() * (16 - 10 + 1)) + 10,
-      windDirection: Math.floor(Math.random() * 360),
-      waterTemperature: parseFloat((24.5 + Math.random() * 2).toFixed(1))
-    });
-  }
-
-  const station2Data = [
-    { timestamp: '2025-04-01T08:00:00', humidity: 60, temperature: 27, airPressure: 1015, irradiation: 480, oxygen: 20.9, rainfall: 12, windspeed: 13, windDirection: 45 },
-    { timestamp: '2025-04-01T09:00:00', humidity: 62, temperature: 28, airPressure: 1014, irradiation: 490, oxygen: 21, rainfall: 10, windspeed: 11, windDirection: 135 },
-    { timestamp: '2025-04-01T10:00:00', humidity: 64, temperature: 29, airPressure: 1013, irradiation: 500, oxygen: 20.8, rainfall: 9, windspeed: 12, windDirection: 225 },
-    { timestamp: '2025-04-01T11:00:00', humidity: 66, temperature: 30, airPressure: 1012, irradiation: 510, oxygen: 20.7, rainfall: 6, windspeed: 14, windDirection: 315 },
-  ];
 
   return (
     <Container style={{ marginTop: '20px' }}>
@@ -171,8 +289,9 @@ const Download = () => {
             variant="success"
             onClick={handleDownload}
             className="px-5 py-2 fw-bold shadow-lg"
+            disabled={loading}
           >
-            Download Data
+            {loading ? 'Loading...' : 'Download Data'}
           </Button>
         </Col>
       </Row>

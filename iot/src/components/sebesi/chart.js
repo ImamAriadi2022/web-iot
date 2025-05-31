@@ -7,17 +7,17 @@ const TrendChart = ({ data }) => {
   const [selectedMetric, setSelectedMetric] = useState(null);
   const [interval, setInterval] = useState(15); // Default interval: 15 minutes
 
-  // Label untuk setiap metrik
+  // Label untuk setiap metrik (disesuaikan dengan tabel Station1)
   const metricLabels = {
-    temperature: "Temperature (°C)",
     humidity: "Humidity (%)",
+    temperature: "Temperature (°C)",
     airPressure: "Air Pressure (hPa)",
     irradiation: "Irradiation (W/m²)",
-    oxygen: "Oxygen (%)",
+    oxygen: "Upper Water Temp (°C)",
     rainfall: "Rainfall (mm)",
-    windspeed: "Wind Speed (km/h)",
+    windspeed: "Windspeed (km/h)",
     windDirection: "Wind Direction (°)",
-    waterTemperature: "Water Temperature (°C)", // Menambahkan Water Temperature
+    waterTemperature: "Water Temperature (Lower, °C)",
   };
 
   // Filter data untuk menampilkan data per hari
@@ -53,6 +53,24 @@ const TrendChart = ({ data }) => {
     return filtered;
   };
 
+  // Fungsi untuk mendapatkan domain Y agar line chart selalu di tengah
+  const getYDomain = (data, metric) => {
+    const values = data
+      .map((item) => {
+        const v = Number(item[metric]);
+        return isNaN(v) ? null : v;
+      })
+      .filter((v) => v !== null);
+
+    if (values.length === 0) return [0, 1];
+
+    const max = Math.max(...values);
+    const min = Math.min(...values);
+    const absMax = Math.max(Math.abs(max), Math.abs(min));
+    // Sumbu Y dari 0 ke 2x nilai maksimum absolut (atau dari -absMax ke absMax jika ingin simetris)
+    return [0, absMax * 2];
+  };
+
   return (
     <>
       <Row>
@@ -76,10 +94,10 @@ const TrendChart = ({ data }) => {
                 <LineChart data={filterDataPerDay(data)}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="timestamp" />
-                  <YAxis />
+                  <YAxis domain={getYDomain(filterDataPerDay(data), metric)} />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey={metric} stroke="#007bff" activeDot={{ r: 8 }} />
+                  <Line name={metricLabels[metric]} type="monotone" dataKey={metric} stroke="#007bff" activeDot={{ r: 8 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -111,10 +129,10 @@ const TrendChart = ({ data }) => {
             <LineChart data={filterDataByInterval(data, interval)}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="timestamp" />
-              <YAxis />
+              <YAxis domain={getYDomain(filterDataByInterval(data, interval), selectedMetric)} />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey={selectedMetric} stroke="#007bff" activeDot={{ r: 8 }} />
+              <Line name={metricLabels[selectedMetric]} type="monotone" dataKey={selectedMetric} stroke="#007bff" activeDot={{ r: 8 }} />
             </LineChart>
           </ResponsiveContainer>
         </Modal.Body>

@@ -26,26 +26,31 @@ const OxygenGauge = ({ oxygen }) => {
   // Calculate percent value for GaugeChart (water temp range 10°C to 40°C)
   const percentValue = (oxygen - 10) / 30;
 
-  return (
-    <div style={{ width: "200px", margin: "0 auto" }}>
-      <GaugeChart
-        id="oxygen-gauge"
-        nrOfLevels={100}
-        arcsLength={[percentValue, 1 - percentValue]}
-        colors={getColor(oxygen)}
-        percent={percentValue}
-        arcPadding={0.01}
-        cornerRadius={3}
-        needleColor="#464A4F"
-        needleBaseColor="#464A4F"
-        textColor="#000000"
-        formatTextValue={() => `${oxygen.toFixed(1)}°C`}
-      />
-      <p style={{ textAlign: "center", marginTop: "-10px", fontWeight: "bold" }}>
-        {getCategory(oxygen)}
-      </p>
-    </div>
-  );
+  // ...existing code...
+    return (
+      <div style={{ width: "200px", margin: "0 auto" }}>
+        <GaugeChart
+          id="oxygen-gauge"
+          nrOfLevels={100}
+          arcsLength={[percentValue, 1 - percentValue]}
+          colors={getColor(oxygen)}
+          percent={percentValue}
+          arcPadding={0.01}
+          cornerRadius={3}
+          needleColor="#464A4F"
+          needleBaseColor="#464A4F"
+          textColor="#000000"
+          formatTextValue={() => `${oxygen.toFixed(1)}°C`}
+        />
+        <p style={{ textAlign: "center", marginTop: "-10px", fontWeight: "bold" }}>
+          Upper Water Temp (°C)
+        </p>
+        <p style={{ textAlign: "center", marginTop: "-10px", fontWeight: "bold" }}>
+          {getCategory(oxygen)}
+        </p>
+      </div>
+    );
+  // ...existing code...
 };
 
 export default OxygenGauge;

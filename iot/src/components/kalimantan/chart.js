@@ -1,63 +1,71 @@
 import React, { useState } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { Row, Col, Modal, Button, ButtonGroup } from "react-bootstrap";
 
-const TrendChart = ({ data }) => {
+// Ambil hanya 1 data (terbaru) per hari
+const getOneDataPerDay = (data) => {
+  const map = {};
+  data.forEach(item => {
+    const date = item.timestamp ? item.timestamp.slice(0, 10) : '';
+    if (date) map[date] = item;
+  });
+  return Object.values(map).sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+};
+
+const TrendChart = ({ data, fields }) => {
   const [showDetail, setShowDetail] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState(null);
   const [interval, setInterval] = useState(15); // Default interval: 15 minutes
 
-  // Label untuk setiap metrik
-  const metricLabels = {
-    temperature: "Temperature (°C)",
-    humidity: "Humidity (%)",
-    airPressure: "Air Pressure (hPa)",
-    irradiation: "Irradiation (W/m²)",
-    oxygen: "Oxygen (%)",
-    rainfall: "Rainfall (mm)",
-    windspeed: "Wind Speed (km/h)",
-    windDirection: "Wind Direction (°)",
-    waterTemperature: "Water Temperature (°C)", // Menambahkan Water Temperature
-  };
-
-  // Filter data untuk menampilkan data per hari
-  const filterDataPerDay = (data) => {
-    const filtered = [];
-    const seenDates = new Set();
-
-    data.forEach((item) => {
-      const date = new Date(item.timestamp).toISOString().split("T")[0]; // Ambil tanggal saja
-      if (!seenDates.has(date)) {
-        filtered.push(item);
-        seenDates.add(date);
-      }
-    });
-
-    return filtered;
-  };
-
-  // Filter data berdasarkan interval (15 menit atau 30 menit)
-  const filterDataByInterval = (data, interval) => {
-    const filtered = [];
-    let lastTimestamp = null;
+  // Filter data berdasarkan interval menit (khusus modal)
+    const filterDataByInterval = (data, intervalMinutes) => {
+      if (!data || data.length === 0) return [];
+      // Urutkan data dari waktu paling awal ke paling akhir
+      const sorted = [...data].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      const filtered = [];
+      let lastTimestamp = null;
   
-    data.forEach((item) => {
-      const currentTimestamp = new Date(item.timestamp).getTime();
+      sorted.forEach((item) => {
+        const currentTimestamp = new Date(item.timestamp).getTime();
+        if (
+          !lastTimestamp ||
+          currentTimestamp - lastTimestamp >= intervalMinutes * 60 * 1000
+        ) {
+          filtered.push(item);
+          lastTimestamp = currentTimestamp;
+        }
+      });
   
-      if (!lastTimestamp || currentTimestamp - lastTimestamp >= interval * 60 * 1000) {
-        filtered.push(item);
-        lastTimestamp = currentTimestamp;
-      }
-    });
-  
-    return filtered;
-  };
+      return filtered;
+    };
+
+  // Data untuk chart utama: hanya 1 data per hari
+  const mainChartData = getOneDataPerDay(data);
+
+  // Data untuk modal: gunakan data asli (bukan mainChartData), filter interval
+  const modalData =
+    showDetail && selectedMetric
+      ? filterDataByInterval(data, interval)
+      : [];
+    
+  if (showDetail && selectedMetric) {
+    console.log("Modal data by interval:", modalData);
+  }
 
   return (
     <>
       <Row>
-        {Object.keys(metricLabels).map((metric) => (
-          <Col md={4} className="mb-4" key={metric}>
+        {fields.map((field) => (
+          <Col md={4} className="mb-4" key={field.key}>
             <div
               style={{
                 backgroundColor: "#ffffff",
@@ -67,19 +75,35 @@ const TrendChart = ({ data }) => {
                 cursor: "pointer",
               }}
               onClick={() => {
-                setSelectedMetric(metric);
+                setSelectedMetric(field.key);
                 setShowDetail(true);
               }}
             >
-              <h5 style={{ color: "#007bff", textAlign: "center" }}>{metricLabels[metric]}</h5>
+              <h5 style={{ color: "#007bff", textAlign: "center" }}>
+                {field.label}
+              </h5>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={filterDataPerDay(data)}>
+                <LineChart data={mainChartData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="timestamp" />
+                  <XAxis
+                    dataKey="timestamp"
+                    tickFormatter={(value) =>
+                      value ? value.slice(0, 10) : ""
+                    }
+                  />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip
+                    labelFormatter={(value) =>
+                      value ? value.replace("T", " ") : ""
+                    }
+                  />
                   <Legend />
-                  <Line type="monotone" dataKey={metric} stroke="#007bff" activeDot={{ r: 8 }} />
+                  <Line
+                    type="monotone"
+                    dataKey={field.key}
+                    stroke="#007bff"
+                    activeDot={{ r: 8 }}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -88,9 +112,18 @@ const TrendChart = ({ data }) => {
       </Row>
 
       {/* Modal untuk Detail Chart */}
-      <Modal show={showDetail} onHide={() => setShowDetail(false)} size="lg" centered>
+      <Modal
+        show={showDetail}
+        onHide={() => setShowDetail(false)}
+        size="lg"
+        centered
+      >
         <Modal.Header closeButton>
-          <Modal.Title>{selectedMetric ? metricLabels[selectedMetric] : "Detail Chart"}</Modal.Title>
+          <Modal.Title>
+            {selectedMetric
+              ? fields.find((f) => f.key === selectedMetric)?.label
+              : "Detail Chart"}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <ButtonGroup className="mb-3">
@@ -108,13 +141,27 @@ const TrendChart = ({ data }) => {
             </Button>
           </ButtonGroup>
           <ResponsiveContainer width="100%" height={500}>
-            <LineChart data={filterDataByInterval(data, interval)}>
+            <LineChart data={modalData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="timestamp" />
+              <XAxis
+                dataKey="timestamp"
+                tickFormatter={(value) =>
+                  value ? value.replace("T", " ").slice(0, 16) : ""
+                }
+              />
               <YAxis />
-              <Tooltip />
+              <Tooltip
+                labelFormatter={(value) =>
+                  value ? value.replace("T", " ") : ""
+                }
+              />
               <Legend />
-              <Line type="monotone" dataKey={selectedMetric} stroke="#007bff" activeDot={{ r: 8 }} />
+              <Line
+                type="monotone"
+                dataKey={selectedMetric}
+                stroke="#007bff"
+                activeDot={{ r: 8 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </Modal.Body>
