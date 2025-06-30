@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Button, Form, Modal, Alert } from 'react-bootstrap';
 import { saveAs } from 'file-saver';
+import { useEffect, useState } from 'react';
+import { Alert, Button, Col, Container, Form, Modal, Row } from 'react-bootstrap';
 import * as XLSX from 'xlsx';
+import { resampleTimeSeries } from '../../utils/timeSeriesResampler';
 
 // Helper untuk validasi dan konversi tanggal (sama seperti di Station1.js)
 const getValidTimestamp = (item) => {
@@ -58,6 +59,11 @@ const Download = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [noBackup, setNoBackup] = useState(false);
+  
+  // Opsi resampling
+  const [enableResampling, setEnableResampling] = useState(false);
+  const [resampleInterval, setResampleInterval] = useState(15);
+  const [resampleMethod, setResampleMethod] = useState('mean');
 
   // Ambil data dari localStorage saat komponen mount, sebelum fetch API
   useEffect(() => {
@@ -192,11 +198,29 @@ const Download = () => {
       return;
     }
 
-    const data = filterDataByDate(allData);
+    let data = filterDataByDate(allData);
 
     if (data.length === 0) {
       alert('No data available for the selected date range.');
       return;
+    }
+
+    // Apply resampling jika diaktifkan
+    if (enableResampling) {
+      try {
+        // Tentukan fields yang akan di-resample
+        const fields = ['humidity', 'temperature', 'airPressure', 'irradiation', 'oxygen', 'rainfall', 'windspeed', 'windDirection', 'waterTemperature'];
+        data = resampleTimeSeries(data, resampleInterval, resampleMethod, fields);
+        
+        if (data.length === 0) {
+          alert('No data available after resampling.');
+          return;
+        }
+      } catch (error) {
+        console.error('Resampling error:', error);
+        alert('Error during resampling: ' + error.message);
+        return;
+      }
     }
 
     // Pastikan urutan kolom sama dengan tabel Station1
@@ -221,14 +245,18 @@ const Download = () => {
       return obj;
     });
 
+    // Generate filename with resampling info
+    const resampleSuffix = enableResampling ? `_resampled_${resampleInterval}min_${resampleMethod}` : '';
+    const baseFilename = `Station1_data${resampleSuffix}`;
+
     if (fileFormat === 'json') {
       const blob = new Blob([JSON.stringify(dataForExport, null, 2)], { type: 'application/json' });
-      saveAs(blob, `Station1_data.json`);
+      saveAs(blob, `${baseFilename}.json`);
     } else if (fileFormat === 'csv') {
       const worksheet = XLSX.utils.json_to_sheet(dataForExport, { header: columns });
       const csv = XLSX.utils.sheet_to_csv(worksheet);
       const blob = new Blob([csv], { type: 'text/csv' });
-      saveAs(blob, `Station1_data.csv`);
+      saveAs(blob, `${baseFilename}.csv`);
     }
   };
 
@@ -338,6 +366,66 @@ const Download = () => {
           </Form.Group>
         </Col>
       </Row>
+
+      {/* Resampling Options */}
+      <Row className="mt-4">
+        <Col>
+          <Form.Group>
+            <Form.Check
+              type="checkbox"
+              label="Enable Data Resampling"
+              checked={enableResampling}
+              onChange={(e) => setEnableResampling(e.target.checked)}
+              className="fw-bold"
+              disabled={noBackup}
+            />
+            <Form.Text className="text-muted">
+              Resample data ke interval waktu tertentu (berguna untuk dataset besar)
+            </Form.Text>
+          </Form.Group>
+        </Col>
+      </Row>
+
+      {enableResampling && !noBackup && (
+        <>
+          <Row className="mt-3">
+            <Col md={6}>
+              <Form.Group controlId="resampleInterval">
+                <Form.Label className="fw-bold">Interval (minutes)</Form.Label>
+                <Form.Select
+                  value={resampleInterval}
+                  onChange={(e) => setResampleInterval(parseInt(e.target.value))}
+                  className="shadow-sm"
+                >
+                  <option value={5}>5 minutes</option>
+                  <option value={15}>15 minutes</option>
+                  <option value={30}>30 minutes</option>
+                  <option value={60}>1 hour</option>
+                  <option value={360}>6 hours</option>
+                  <option value={720}>12 hours</option>
+                  <option value={1440}>1 day</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group controlId="resampleMethod">
+                <Form.Label className="fw-bold">Aggregation Method</Form.Label>
+                <Form.Select
+                  value={resampleMethod}
+                  onChange={(e) => setResampleMethod(e.target.value)}
+                  className="shadow-sm"
+                >
+                  <option value="mean">Average (Mean)</option>
+                  <option value="first">First Value</option>
+                  <option value="last">Last Value</option>
+                  <option value="max">Maximum</option>
+                  <option value="min">Minimum</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+        </>
+      )}
 
       <Row className="mt-4">
         <Col className="text-center">

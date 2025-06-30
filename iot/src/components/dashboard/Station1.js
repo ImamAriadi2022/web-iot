@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Table, ButtonGroup, Button } from 'react-bootstrap';
+import { useEffect, useState } from 'react';
+import { Button, ButtonGroup, Col, Container, Row, Table } from 'react-bootstrap';
 
 import TrendChart from "./chart";
 
 // Komponen Gauge
-import TemperatureGauge from './status/TemperaturGauge';
-import HumidityGauge from './status/HumidityGauge';
 import AirPressureGauge from './status/AirPressure';
-import WindSpeedGauge from './status/WindSpeed';
+import HumidityGauge from './status/HumidityGauge';
 import RainfallGauge from './status/Rainfall';
-import WindDirectionGauge from './status/WindDirection';
+import TemperatureGauge from './status/TemperaturGauge';
 import WaterTemperatureGauge from './status/WaterTemperature';
+import WindDirectionGauge from './status/WindDirection';
+import WindSpeedGauge from './status/WindSpeed';
 
 // Daftar field yang ingin ditampilkan (dinamis, urutkan sesuai kebutuhan frontend)
 const FIELD_CONFIG = [
@@ -61,6 +61,7 @@ const Station1 = () => {
   const [filter, setFilter] = useState('1d');
   const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
   // Load data dari localStorage saat pertama kali mount
   useEffect(() => {

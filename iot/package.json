@@ -32,6 +32,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "proxy": "https://c-greenproject.org:7070",
   "eslintConfig": {
     "extends": [
       "react-app",

@@ -1,15 +1,15 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Button, ButtonGroup, Col, Modal, Row } from "react-bootstrap";
 import {
-  LineChart,
+  CartesianGrid,
+  Legend,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from "recharts";
-import { Row, Col, Modal, Button, ButtonGroup } from "react-bootstrap";
 
 // Ambil hanya 1 data (terbaru) per hari
 const getOneDataPerDay = (data) => {
@@ -83,7 +83,7 @@ const TrendChart = ({ data, fields }) => {
                 {field.label}
               </h5>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={mainChartData}>
+                <LineChart data={mainChartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="timestamp"
@@ -91,7 +91,10 @@ const TrendChart = ({ data, fields }) => {
                       value ? value.slice(0, 10) : ""
                     }
                   />
-                  <YAxis />
+                  <YAxis 
+                    domain={['dataMin - 5', 'dataMax + 10']}
+                    tickCount={6}
+                  />
                   <Tooltip
                     labelFormatter={(value) =>
                       value ? value.replace("T", " ") : ""
@@ -103,6 +106,7 @@ const TrendChart = ({ data, fields }) => {
                     dataKey={field.key}
                     stroke="#007bff"
                     activeDot={{ r: 8 }}
+                    strokeWidth={2}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -141,7 +145,7 @@ const TrendChart = ({ data, fields }) => {
             </Button>
           </ButtonGroup>
           <ResponsiveContainer width="100%" height={500}>
-            <LineChart data={modalData}>
+            <LineChart data={modalData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="timestamp"
@@ -149,7 +153,10 @@ const TrendChart = ({ data, fields }) => {
                   value ? value.replace("T", " ").slice(0, 16) : ""
                 }
               />
-              <YAxis />
+              <YAxis 
+                domain={['dataMin - 5', 'dataMax + 10']}
+                tickCount={8}
+              />
               <Tooltip
                 labelFormatter={(value) =>
                   value ? value.replace("T", " ") : ""
@@ -161,6 +168,7 @@ const TrendChart = ({ data, fields }) => {
                 dataKey={selectedMetric}
                 stroke="#007bff"
                 activeDot={{ r: 8 }}
+                strokeWidth={2}
               />
             </LineChart>
           </ResponsiveContainer>

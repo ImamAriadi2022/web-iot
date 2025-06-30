@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Row, Col, Modal, Button, ButtonGroup } from "react-bootstrap";
+import { useState } from "react";
+import { Button, ButtonGroup, Col, Modal, Row } from "react-bootstrap";
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const TrendChart = ({ data }) => {
   const [showDetail, setShowDetail] = useState(false);
@@ -74,13 +74,16 @@ const TrendChart = ({ data }) => {
             >
               <h5 style={{ color: "#007bff", textAlign: "center" }}>{metricLabels[metric]}</h5>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={filterDataPerDay(safeData)}>
+                <LineChart data={filterDataPerDay(safeData)} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="timestamp" />
-                  <YAxis />
+                  <YAxis 
+                    domain={['dataMin - 5', 'dataMax + 10']}
+                    tickCount={6}
+                  />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey={metric} stroke="#007bff" activeDot={{ r: 8 }} />
+                  <Line type="monotone" dataKey={metric} stroke="#007bff" activeDot={{ r: 8 }} strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -109,13 +112,16 @@ const TrendChart = ({ data }) => {
             </Button>
           </ButtonGroup>
           <ResponsiveContainer width="100%" height={500}>
-            <LineChart data={filterDataByInterval(safeData, interval)}>
+            <LineChart data={filterDataByInterval(safeData, interval)} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="timestamp" />
-              <YAxis />
+              <YAxis 
+                domain={['dataMin - 5', 'dataMax + 10']}
+                tickCount={8}
+              />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey={selectedMetric} stroke="#007bff" activeDot={{ r: 8 }} />
+              <Line type="monotone" dataKey={selectedMetric} stroke="#007bff" activeDot={{ r: 8 }} strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </Modal.Body>

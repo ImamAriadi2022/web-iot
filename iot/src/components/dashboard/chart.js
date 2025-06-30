@@ -1,15 +1,15 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Button, ButtonGroup, Col, Modal, Row } from "react-bootstrap";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
+    CartesianGrid,
+    Legend,
+    Line,
+    LineChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
 } from "recharts";
-import { Row, Col, Modal, Button, ButtonGroup } from "react-bootstrap";
 
 // Field config harus sama urutan & key-nya dengan Station1.js
 const FIELD_CONFIG = [
@@ -139,7 +139,7 @@ const TrendChart = ({ data, filter = '1d' }) => {
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart
                   data={mainChartData}
-                  margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
@@ -157,7 +157,10 @@ const TrendChart = ({ data, filter = '1d' }) => {
                           })
                     }
                   />
-                  <YAxis domain={getYAxisDomain(mainChartData, field.key)} />
+                  <YAxis 
+                    domain={['dataMin - 5', 'dataMax + 10']}
+                    tickCount={6}
+                  />
                   <Tooltip
                     labelFormatter={(label) =>
                       !label || isNaN(label)
@@ -171,6 +174,7 @@ const TrendChart = ({ data, filter = '1d' }) => {
                     dataKey={field.key}
                     stroke="#007bff"
                     activeDot={{ r: 6 }}
+                    strokeWidth={2}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -205,7 +209,7 @@ const TrendChart = ({ data, filter = '1d' }) => {
           <ResponsiveContainer width="100%" height={500}>
             <LineChart
               data={filterDataByInterval(interval)}
-              margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
@@ -222,7 +226,8 @@ const TrendChart = ({ data, filter = '1d' }) => {
                 }
               />
               <YAxis
-                domain={getYAxisDomain(filterDataByInterval(interval), selectedMetric)}
+                domain={['dataMin - 5', 'dataMax + 10']}
+                tickCount={8}
               />
               <Tooltip
                 labelFormatter={(label) =>
@@ -237,6 +242,7 @@ const TrendChart = ({ data, filter = '1d' }) => {
                 dataKey={selectedMetric}
                 stroke="#007bff"
                 activeDot={{ r: 6 }}
+                strokeWidth={2}
               />
             </LineChart>
           </ResponsiveContainer>
