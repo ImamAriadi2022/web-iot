@@ -1,7 +1,6 @@
-import React from 'react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
-import { FaArrowRight } from 'react-icons/fa';
 import { Slide } from 'react-awesome-reveal';
+import { Button, Col, Container, Row } from 'react-bootstrap';
+import { FaArrowRight } from 'react-icons/fa';
 
 const Launch = () => {
   return (
@@ -17,7 +16,7 @@ const Launch = () => {
                 To access the full data of the microclimate device, please access the links below:
               </p>
               <div className="mt-3">
-                <Button variant="primary" className="me-2 mb-2" href="/dashboard">
+                <Button variant="primary" className="me-2 mb-2" href="/petengoran">
                   Petengoran <FaArrowRight />
                 </Button>
                 <Button variant="success" className="me-2 mb-2" href="/kalimantan">

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { FaBars } from 'react-icons/fa';
 import { Route, Routes } from 'react-router-dom';
-import DashboardSect from '../components/kalimantan/Dashboardsect';
-import Download from '../components/kalimantan/Download';
-import Sidebar from '../components/kalimantan/Sidebar';
-import Station1 from '../components/kalimantan/Station1';
+import DashboardSect from '../components/petengoran/Dashboardsect';
+import Download from '../components/petengoran/Download';
+import Sidebar from '../components/petengoran/Sidebar';
+import Station1 from '../components/petengoran/Station1';
 
-const Kalimantan = () => {
+const Petengoran = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
@@ -42,7 +42,7 @@ const Kalimantan = () => {
         }}
       >
         <Routes>
-          {/* Kalimantan Section */}
+          {/* Petengoran Section */}
           <Route path="/" element={<DashboardSect />} />
 
           {/* Station 1 */}
@@ -56,4 +56,4 @@ const Kalimantan = () => {
   );
 };
 
-export default Kalimantan;
+export default Petengoran;

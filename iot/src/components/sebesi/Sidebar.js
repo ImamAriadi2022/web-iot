@@ -1,6 +1,5 @@
-import React from 'react';
+import { FaDownload, FaHome, FaMapMarkerAlt, FaTachometerAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import { FaTachometerAlt, FaMapMarkerAlt, FaDownload, FaHome } from 'react-icons/fa';
 
 const Sidebar = ({ isOpen }) => {
   return (
@@ -73,20 +72,6 @@ const Sidebar = ({ isOpen }) => {
                 <FaMapMarkerAlt style={{ marginRight: '10px' }} />
                 Station 1
               </Link>
-            </li>
-            <li style={{ marginBottom: '15px' }}>
-              {/* <Link
-                to="/sebesi/station2"
-                style={{
-                  textDecoration: 'none',
-                  color: '#000',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <FaMapMarkerAlt style={{ marginRight: '10px' }} />
-                Station 2
-              </Link> */}
             </li>
             <li>
               <Link

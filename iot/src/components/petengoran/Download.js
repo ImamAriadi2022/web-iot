@@ -4,8 +4,8 @@ import { Button, Col, Container, Form, Modal, Row } from 'react-bootstrap';
 import { fillDataGaps, generateConsistentIntervalData, smoothData } from '../../utils/dataInterpolation';
 import { resampleTimeSeries } from '../../utils/timeSeriesResampler';
 
-// API endpoint untuk Station 1 (ambil dari .env, sama seperti Station1.js)
-const API_KALIMANTAN_TOPIC1 = process.env.REACT_APP_API_KALIMANTAN_ONEMONTH_TOPIC1;
+// API endpoint untuk Petengoran Station 1
+const API_PETENGORAN_ONEMONTH = process.env.REACT_APP_API_PETENGORAN + 'data/onemonth';
 
 // Fungsi parsing timestamp agar bisa dibandingkan dengan filter tanggal
 const parseTimestamp = (ts) => {
@@ -205,26 +205,26 @@ const Download = () => {
         setDataReady(false);
         console.log("Starting data fetch...");
         
-        // Fetch Station 1 data
-        const res1 = await fetch(API_KALIMANTAN_TOPIC1);
+        // Fetch Petengoran Station 1 data
+        const res1 = await fetch(API_PETENGORAN_ONEMONTH);
         
         console.log("Response status:", { 
-          station1: res1.status, 
-          station1_ok: res1.ok
+          petengoran_station1: res1.status, 
+          petengoran_station1_ok: res1.ok
         });
         
         if (!res1.ok) {
           const text1 = await res1.text();
-          console.error("Station 1 API error:", text1.substring(0, 200));
+          console.error("Petengoran Station 1 API error:", text1.substring(0, 200));
         }
         
         const json1 = res1.ok ? await res1.json() : { result: [] };
         
-        console.log("Station 1 API response:", json1);
+        console.log("Petengoran Station 1 API response:", json1);
         
         const station1Data = Array.isArray(json1.result) ? json1.result.map(mapStation1) : [];
         
-        console.log("Mapped Station 1 data:", station1Data.length, station1Data.slice(0, 3));
+        console.log("Mapped Petengoran Station 1 data:", station1Data.length, station1Data.slice(0, 3));
         
         setStation1Data(station1Data);
         setDataReady(true);
@@ -244,7 +244,7 @@ const Download = () => {
 
   // Debug effect untuk memonitor perubahan data
   useEffect(() => {
-    console.log("Station 1 Data updated:", station1Data.length);
+    console.log("Petengoran Station 1 Data updated:", station1Data.length);
     console.log("Data ready:", dataReady);
   }, [station1Data, dataReady]);
 
@@ -348,7 +348,7 @@ const Download = () => {
     const interpolationSuffix = enableInterpolation ? `_interpolated_${interpolationInterval}min` : '';
     const smoothingSuffix = enableSmoothing ? '_smoothed' : '';
     const resampleSuffix = enableResampling ? `_resampled_${resampleInterval}min_${resampleMethod}` : '';
-    const baseFilename = `Station_1_data${interpolationSuffix}${smoothingSuffix}${resampleSuffix}`;
+    const baseFilename = `Petengoran_Station_1_data${interpolationSuffix}${smoothingSuffix}${resampleSuffix}`;
     
     console.log('Downloading file:', baseFilename);
     
@@ -688,7 +688,7 @@ const Download = () => {
               <span className="text-success">✅ Data siap untuk diunduh!</span>
               <br />
               <small className="text-muted">
-                Station 1: {station1Data.length} records
+                Petengoran Station 1: {station1Data.length} records
                 <br />
                 {enableInterpolation && (
                   <><strong>Interpolasi:</strong> Interval {interpolationInterval} menit{enableSmoothing && ' + Smoothing'}<br /></>

@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { FaBars } from 'react-icons/fa';
 import { Route, Routes } from 'react-router-dom';
 import DashboardSect from '../components/sebesi/Dashboardsect';
 import Download from '../components/sebesi/Download';
 import Sidebar from '../components/sebesi/Sidebar';
 import Station1 from '../components/sebesi/Station1';
-import Station2 from '../components/sebesi/Station2';
 
 const Sebesi = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -48,9 +47,6 @@ const Sebesi = () => {
 
           {/* Station 1 */}
           <Route path="/station1" element={<Station1 />} />
-
-          {/* Station 2 */}
-          <Route path="/station2" element={<Station2 />} />
 
           {/* Download Data */}
           <Route path="/download" element={<Download />} />

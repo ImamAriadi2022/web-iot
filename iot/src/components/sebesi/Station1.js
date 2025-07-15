@@ -36,8 +36,8 @@ const getOneDataPerDay = (data) => {
 // API Sebesi endpoints untuk berbagai periode
 const API_MAP = {
   '1d': process.env.REACT_APP_API_SEBESI_DAILY,
-  '7d': process.env.REACT_APP_API_SEBESI_DAILY, // Gunakan yang sama untuk sementara
-  '1m': process.env.REACT_APP_API_SEBESI_DAILY, // Gunakan yang sama untuk sementara
+  '7d': process.env.REACT_APP_API_SEBESI_WEEKLY,
+  '1m': process.env.REACT_APP_API_SEBESI_MONTHLY,
 };
 
 // Helper untuk validasi dan konversi tanggal
@@ -131,20 +131,20 @@ const mapApiData = (item) => {
   }
   
   // Parse timestamp dari berbagai kemungkinan field
-  const ts = item.TS || item.timestamp || item.created_at;
+  const ts = item.timestamp || item.TS || item.created_at;
   const parsedTs = parseTimestamp(ts);
   
   return {
     timestamp: parsedTs,
-    humidity: item.Humidity != null && !isNaN(item.Humidity) ? parseFloat(item.Humidity) : 'server sedang eror',
-    temperature: item.Temperature != null && !isNaN(item.Temperature) ? parseFloat(item.Temperature) : 'server sedang eror',
-    airPressure: item.AirPressure != null && !isNaN(item.AirPressure) ? parseFloat(item.AirPressure) : 'server sedang eror',
-    windspeed: item.AnemometerSpeed != null && !isNaN(item.AnemometerSpeed) ? parseFloat(item.AnemometerSpeed) : 'server sedang eror',
-    irradiation: item.SolarRadiation != null && !isNaN(item.SolarRadiation) ? parseFloat(item.SolarRadiation) : 'server sedang eror',
-    oxygen: item.Suhu_Air_Atas != null && !isNaN(item.Suhu_Air_Atas) ? parseFloat(item.Suhu_Air_Atas) : 'server sedang eror',
-    rainfall: item.Rainfall != null && !isNaN(item.Rainfall) ? parseFloat(item.Rainfall) : 'server sedang eror',
-    windDirection: item.Angle != null && !isNaN(item.Angle) ? parseFloat(item.Angle) : 'server sedang eror',
-    waterTemperature: item.Suhu_Air_Bawah != null && !isNaN(item.Suhu_Air_Bawah) ? parseFloat(item.Suhu_Air_Bawah) : 'server sedang eror',
+    humidity: item.humidity != null && !isNaN(item.humidity) ? parseFloat(item.humidity) : 'server sedang eror',
+    temperature: item.temperature != null && !isNaN(item.temperature) ? parseFloat(item.temperature) : 'server sedang eror',
+    airPressure: item.air_pressure != null && !isNaN(item.air_pressure) ? parseFloat(item.air_pressure) : 'server sedang eror',
+    windspeed: item.wind_speed != null && !isNaN(item.wind_speed) ? parseFloat(item.wind_speed) : 'server sedang eror',
+    irradiation: item.irradiation != null && !isNaN(item.irradiation) ? parseFloat(item.irradiation) : 'server sedang eror',
+    oxygen: item.oxygen != null && !isNaN(item.oxygen) ? parseFloat(item.oxygen) : 'server sedang eror',
+    rainfall: item.rainfall != null && !isNaN(item.rainfall) ? parseFloat(item.rainfall) : 'server sedang eror',
+    windDirection: item.wind_direction || 'server sedang eror',
+    waterTemperature: item.water_temperature != null && !isNaN(item.water_temperature) ? parseFloat(item.water_temperature) : 'server sedang eror',
   };
 };
 
