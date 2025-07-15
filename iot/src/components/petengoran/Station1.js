@@ -1,15 +1,13 @@
+
 import { useEffect, useState } from 'react';
 import { Button, ButtonGroup, Col, Container, Row, Table } from 'react-bootstrap';
-
 import TrendChart from "./chart";
-
-// Import komponen yang dibutuhkan
 import HumidityGauge from './status/HumidityGauge';
 import IrradiationGauge from './status/Irradiation';
 import RainfallGauge from './status/Rainfall';
 import TemperatureGauge from './status/TemperaturGauge';
 import WindDirectionGauge from './status/WindDirection';
-import WindspeedGauge from './status/WindSpeed';
+import WindSpeedGauge from './status/WindSpeed';
 
 const getOneDataPerDay = (data) => {
   const map = {};
@@ -108,7 +106,7 @@ const formatUserFriendlyTimestamp = (timestamp) => {
   }
 };
 
-// Mapping function untuk menyesuaikan field backend ke frontend Petengoran
+// Mapping function untuk menyesuaikan field backend ke frontend
 const mapApiData = (item) => {
   if (!item) {
     return {
@@ -137,30 +135,32 @@ const mapApiData = (item) => {
   }
   return {
     timestamp: parseTimestamp(ts),
-    humidity: item.humidity ?? 0,
-    temperature: item.temperature ?? 0,
-    rainfall: item.rainfall ?? 0,
-    windspeed: item.wind_speed ?? 0,
-    irradiation: item.irradiation ?? 0,
+    humidity: item.humidity ?? 'alat rusak',
+    temperature: item.temperature ?? 'alat rusak',
+    rainfall: item.rainfall ?? 'alat rusak',
+    windspeed: item.windspeed ?? item.windspeed ?? item.wind_speed ?? 'alat rusak',
+    irradiation: item.irradiation ?? 'alat rusak',
     windDirection: windDirectionToEnglish(item.direction ?? ''),
-    angle: item.angle ?? 0,
+    angle: item.angle ?? 'alat rusak',
   };
 };
 
+
+console.log('ENV DAILY:', process.env.REACT_APP_API_PETENGORAN_DAILY_STATION1);
+console.log('ENV 1M:', process.env.REACT_APP_API_PETENGORAN_RESAMPLE15M_STATION1);
 const API_MAP = {
-  '1d': process.env.REACT_APP_API_PETENGORAN + 'data/oneday',
-  '7d': process.env.REACT_APP_API_PETENGORAN + 'data/sevendays',
-  '1m': process.env.REACT_APP_API_PETENGORAN + 'data/onemonth',
+  '1d': process.env.REACT_APP_API_PETENGORAN_DAILY_STATION1,
+  '7d': process.env.REACT_APP_API_PETENGORAN_DAILY_STATION1, // fallback ke daily
+  '1m': process.env.REACT_APP_API_PETENGORAN_RESAMPLE15M_STATION1,
 };
+console.log('API_MAP PETENGORAN:', API_MAP);
+
 
 const Station1 = () => {
   const [filter, setFilter] = useState('1d');
   const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [tableData, setTableData] = useState([]);
-  const [showDownloadModal, setShowDownloadModal] = useState(false);
-  
-  // New state variables for better status tracking and gauge data
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [gaugeData, setGaugeData] = useState({
@@ -176,10 +176,7 @@ const Station1 = () => {
 
   // Function to determine which data to use for gauges (latest valid data)
   const determineGaugeData = (data) => {
-    console.log('[Petengoran Station1] determineGaugeData called with data length:', data.length);
-    
     if (!data || data.length === 0) {
-      console.log('[Petengoran Station1] No data available');
       setDataStatus('No data available');
       return {
         humidity: 0,
@@ -191,33 +188,21 @@ const Station1 = () => {
         angle: 0
       };
     }
-
     // Sort data by timestamp (latest first)
     const sortedData = [...data].sort((a, b) => {
       const timeA = new Date(a.timestamp);
       const timeB = new Date(b.timestamp);
       return timeB - timeA;
     });
-
-    console.log('[Petengoran Station1] Sorted data (latest first):', sortedData.slice(0, 3));
-
     // Find the latest valid data for gauges
     let validData = null;
     let latestEntryIndex = -1;
-    
     for (let i = 0; i < sortedData.length; i++) {
       const item = sortedData[i];
-      
-      // Check if timestamp is valid
-      if (!item.timestamp || 
-          item.timestamp === 'error' || 
-          item.timestamp === 'alat rusak' ||
-          isNaN(new Date(item.timestamp).getTime())) {
-        console.log(`[Petengoran Station1] Invalid timestamp at index ${i}:`, item.timestamp);
+      if (!item.timestamp || item.timestamp === 'error' || item.timestamp === 'alat rusak' || isNaN(new Date(item.timestamp).getTime())) {
         continue;
       }
-
-      // Check if essential data fields are valid (numeric values)
+      // Accept both number and string (for 'alat rusak')
       const isValidData = (
         typeof item.humidity === 'number' && !isNaN(item.humidity) &&
         typeof item.temperature === 'number' && !isNaN(item.temperature) &&
@@ -226,19 +211,13 @@ const Station1 = () => {
         typeof item.irradiation === 'number' && !isNaN(item.irradiation) &&
         typeof item.angle === 'number' && !isNaN(item.angle)
       );
-
       if (isValidData) {
         validData = item;
         latestEntryIndex = i;
-        console.log(`[Petengoran Station1] Found valid data at index ${i}:`, item);
         break;
-      } else {
-        console.log(`[Petengoran Station1] Invalid data at index ${i}:`, item);
       }
     }
-
     if (!validData) {
-      console.log('[Petengoran Station1] No valid data found');
       setDataStatus('No valid data available');
       return {
         humidity: 0,
@@ -250,117 +229,49 @@ const Station1 = () => {
         angle: 0
       };
     }
-
     // Set status message
-    const latestTimestamp = new Date(validData.timestamp);
-    const now = new Date();
-    const diffMinutes = Math.floor((now - latestTimestamp) / (1000 * 60));
-    
-    let statusMessage = '';
     if (latestEntryIndex === 0) {
-      statusMessage = `Latest data (${diffMinutes} minutes ago)`;
+      setDataStatus('Using latest data for gauges');
     } else {
-      statusMessage = `Using valid data from ${latestEntryIndex + 1} entries ago (${diffMinutes} minutes ago)`;
+      setDataStatus(`Using data from ${latestEntryIndex + 1} entries ago (${formatUserFriendlyTimestamp(validData.timestamp)})`);
     }
-    
-    setDataStatus(statusMessage);
-    
     return {
-      humidity: validData.humidity ?? 0,
-      temperature: validData.temperature ?? 0,
-      rainfall: validData.rainfall ?? 0,
-      windspeed: validData.windspeed ?? 0,
-      irradiation: validData.irradiation ?? 0,
-      windDirection: validData.windDirection ?? '',
-      angle: validData.angle ?? 0
+      humidity: validData.humidity,
+      temperature: validData.temperature,
+      rainfall: validData.rainfall,
+      windspeed: validData.windspeed,
+      irradiation: validData.irradiation,
+      windDirection: validData.windDirection,
+      angle: validData.angle
     };
   };
 
-  // Fetch data with proper error handling
-  const fetchData = async (selectedFilter) => {
+  // Fetch data dari API sesuai filter
+  const fetchData = async (filterType) => {
     setLoading(true);
     setError(null);
-    
-    const apiUrl = API_MAP[selectedFilter];
-    
-    if (!apiUrl) {
-      console.error('[Petengoran Station1] API URL not found for filter:', selectedFilter);
-      setError('API configuration error');
-      setLoading(false);
-      return;
-    }
-
-    console.log(`[Petengoran Station1] Fetching data from: ${apiUrl}`);
-
     try {
-      const response = await fetch(apiUrl);
-      console.log(`[Petengoran Station1] Response status: ${response.status}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const jsonData = await response.json();
-      console.log('[Petengoran Station1] Raw API response:', jsonData);
-
-      // Handle different response structures
-      let rawData = [];
-      if (Array.isArray(jsonData)) {
-        rawData = jsonData;
-      } else if (jsonData.result && Array.isArray(jsonData.result)) {
-        rawData = jsonData.result;
-      } else if (jsonData.data && Array.isArray(jsonData.data)) {
-        rawData = jsonData.data;
-      } else {
-        console.error('[Petengoran Station1] Unexpected response structure:', jsonData);
-        throw new Error('Unexpected API response structure');
-      }
-
-      console.log(`[Petengoran Station1] Processing ${rawData.length} records`);
-
-      // Map the data
-      const mappedData = rawData.map(mapApiData);
-      console.log('[Petengoran Station1] Mapped data sample:', mappedData.slice(0, 3));
-
-      // Sort by timestamp (latest first)
-      const sortedData = mappedData.sort((a, b) => {
+      const url = API_MAP[filterType];
+      if (!url) throw new Error(`No API URL configured for filter: ${filterType}`);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      // Perbaikan: akses data.data.result sesuai struktur response
+      const mapped = Array.isArray(data.data?.result) ? data.data.result.map(mapApiData) : [];
+      mapped.sort((a, b) => {
+        if (a.timestamp === 'error' || a.timestamp === 'alat rusak' || b.timestamp === 'error' || b.timestamp === 'alat rusak') {
+          return (a.timestamp === 'error' || a.timestamp === 'alat rusak') ? 1 : -1;
+        }
         const timeA = new Date(a.timestamp);
         const timeB = new Date(b.timestamp);
         return timeB - timeA;
       });
-
-      setAllData(sortedData);
-
-      // Determine which data to display based on filter
-      let filteredResults = sortedData;
-      if (selectedFilter === '1d') {
-        // Show all data for 1 day
-        filteredResults = sortedData;
-      } else {
-        // For 7 days and 1 month, show one data point per day
-        filteredResults = getOneDataPerDay(sortedData);
-      }
-
-      setFilteredData(filteredResults);
-      setTableData(filteredResults.slice(0, 10)); // Show top 10 in table
-
-      // Set gauge data from latest valid entry
-      const newGaugeData = determineGaugeData(sortedData);
+      setAllData(mapped);
+      const newGaugeData = determineGaugeData(mapped);
       setGaugeData(newGaugeData);
-
-      console.log('[Petengoran Station1] Data processing completed:', {
-        total: sortedData.length,
-        filtered: filteredResults.length,
-        tableEntries: Math.min(filteredResults.length, 10),
-        gaugeData: newGaugeData
-      });
-
     } catch (error) {
-      console.error('[Petengoran Station1] Error fetching data:', error);
       setError(`Failed to fetch data: ${error.message}`);
       setAllData([]);
-      setFilteredData([]);
-      setTableData([]);
       setGaugeData({
         humidity: 0,
         temperature: 0,
@@ -376,183 +287,246 @@ const Station1 = () => {
     }
   };
 
-  // useEffect to fetch data on component mount and filter change
-  useEffect(() => {
-    fetchData(filter);
-  }, [filter]);
-
   // Handle filter change
-  const handleFilterChange = (newFilter) => {
-    console.log('[Petengoran Station1] Filter changed to:', newFilter);
-    setFilter(newFilter);
+  const handleFilterChange = (filterType) => {
+    setFilter(filterType);
+    fetchData(filterType);
   };
 
+  useEffect(() => {
+    fetchData(filter);
+    // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    setFilteredData(allData);
+    if (filter === '7d' || filter === '1m') {
+      setTableData(getOneDataPerDay(allData));
+    } else {
+      setTableData(allData);
+    }
+    if (allData.length > 0) {
+      const newGaugeData = determineGaugeData(allData);
+      setGaugeData(newGaugeData);
+    }
+  }, [allData, filter]);
+
+  // Prepare chart data (sort chronologically for better chart visualization)
+  const chartData = [...filteredData].sort((a, b) => {
+    if (a.timestamp === 'error' || a.timestamp === 'alat rusak' || b.timestamp === 'error' || b.timestamp === 'alat rusak') {
+      return 0;
+    }
+    const timeA = new Date(a.timestamp);
+    const timeB = new Date(b.timestamp);
+    return timeA - timeB;
+  });
+
   return (
-    <Container fluid className="p-4">
-      <Row>
-        <Col>
-          <h2 className="text-center mb-4 fw-bold text-primary">
-            Petengoran - Station 1
-          </h2>
-        </Col>
-      </Row>
-
-      {/* Status and Filter Row */}
-      <Row className="mb-4">
-        <Col md={6}>
-          <div className="d-flex align-items-center">
-            <span className="me-3 fw-bold">Status:</span>
-            <span className={`badge ${loading ? 'bg-warning' : error ? 'bg-danger' : 'bg-success'}`}>
-              {loading ? 'Loading...' : error ? 'Error' : 'Connected'}
-            </span>
-            {dataStatus && (
-              <span className="ms-3 text-muted small">
-                {dataStatus}
-              </span>
-            )}
-          </div>
-        </Col>
-        <Col md={6} className="text-end">
-          <ButtonGroup aria-label="Data filter">
-            <Button
-              variant={filter === '1d' ? 'primary' : 'outline-primary'}
-              onClick={() => handleFilterChange('1d')}
-              disabled={loading}
-            >
-              1 Day
-            </Button>
-            <Button
-              variant={filter === '7d' ? 'primary' : 'outline-primary'}
-              onClick={() => handleFilterChange('7d')}
-              disabled={loading}
-            >
-              7 Days
-            </Button>
-            <Button
-              variant={filter === '1m' ? 'primary' : 'outline-primary'}
-              onClick={() => handleFilterChange('1m')}
-              disabled={loading}
-            >
-              1 Month
-            </Button>
-          </ButtonGroup>
-        </Col>
-      </Row>
-
-      {/* Error Display */}
-      {error && (
-        <Row className="mb-4">
+    <section
+      style={{
+        backgroundColor: '#f8f9fa',
+        color: '#212529',
+        minHeight: '100vh',
+        padding: '20px 0',
+        fontFamily: 'Arial, sans-serif',
+      }}
+    >
+      <Container>
+        <Row className="mb-5">
           <Col>
-            <div className="alert alert-danger" role="alert">
-              <strong>Error:</strong> {error}
-            </div>
-          </Col>
-        </Row>
-      )}
-
-      {/* Gauges Row */}
-      <Row className="mb-4">
-        <Col md={4} className="mb-3">
-          <HumidityGauge humidity={typeof gaugeData.humidity === 'number' ? gaugeData.humidity : 0} />
-        </Col>
-        <Col md={4} className="mb-3">
-          <TemperatureGauge temperature={typeof gaugeData.temperature === 'number' ? gaugeData.temperature : 0} />
-        </Col>
-        <Col md={4} className="mb-3">
-          <RainfallGauge rainfall={typeof gaugeData.rainfall === 'number' ? gaugeData.rainfall : 0} />
-        </Col>
-      </Row>
-
-      <Row className="mb-4">
-        <Col md={4} className="mb-3">
-          <WindspeedGauge windspeed={typeof gaugeData.windspeed === 'number' ? gaugeData.windspeed : 0} />
-        </Col>
-        <Col md={4} className="mb-3">
-          <IrradiationGauge irradiation={typeof gaugeData.irradiation === 'number' ? gaugeData.irradiation : 0} />
-        </Col>
-        <Col md={4} className="mb-3">
-          <WindDirectionGauge direction={gaugeData.windDirection || ''} angle={typeof gaugeData.angle === 'number' ? gaugeData.angle : 0} />
-        </Col>
-      </Row>
-
-      {/* Chart Section */}
-      <Row className="mb-4">
-        <Col>
-          <div className="card shadow-sm">
-            <div className="card-header bg-primary text-white">
-              <h5 className="mb-0">Data Trends</h5>
-            </div>
-            <div className="card-body">
-              {filteredData.length > 0 ? (
-                <TrendChart data={filteredData} />
-              ) : (
-                <div className="text-center py-4">
-                  <span className="text-muted">
-                    {loading ? 'Loading chart data...' : 'No data available for chart'}
-                  </span>
+            <h2 className="text-center" style={{ color: '#007bff' }}>Environment Status</h2>
+            <p className="text-center">Data collected from Station 1 (Petengoran)</p>
+            <div className="text-center mb-3">
+              {loading && (
+                <div className="alert alert-info" role="alert">
+                  <div className="spinner-border spinner-border-sm me-2" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  Loading data...
+                </div>
+              )}
+              {error && (
+                <div className="alert alert-danger" role="alert">
+                  <strong>Error:</strong> {error}
+                </div>
+              )}
+              {!loading && !error && dataStatus && (
+                <div className={`alert ${dataStatus.includes('latest data') ? 'alert-success' : 'alert-warning'}`} role="alert">
+                  <strong>Data Status:</strong> {dataStatus}
                 </div>
               )}
             </div>
-          </div>
-        </Col>
-      </Row>
-
-      {/* Data Table */}
-      <Row>
-        <Col>
-          <div className="card shadow-sm">
-            <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Recent Data (Latest 10 entries)</h5>
-              <small>Total records: {allData.length}</small>
+          </Col>
+        </Row>
+        <Row className="g-4">
+          <Col md={4} className="text-center">
+            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
+              <HumidityGauge humidity={typeof gaugeData.humidity === 'number' ? gaugeData.humidity : 0} />
+              <h5>Humidity</h5>
+              <p>{typeof gaugeData.humidity === 'number' ? `${gaugeData.humidity}%` : gaugeData.humidity}</p>
             </div>
-            <div className="card-body p-0">
-              <Table striped hover responsive className="mb-0">
-                <thead className="table-dark">
-                  <tr>
-                    <th>Timestamp</th>
-                    <th>Humidity (%)</th>
-                    <th>Temperature (°C)</th>
-                    <th>Rainfall (mm)</th>
-                    <th>Wind Speed (m/s)</th>
-                    <th>Irradiation (W/m²)</th>
-                    <th>Wind Direction</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan="7" className="text-center py-4">
-                        <div className="spinner-border text-primary" role="status">
-                          <span className="visually-hidden">Loading...</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : tableData.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="text-center py-4 text-muted">
-                        No data available
-                      </td>
-                    </tr>
-                  ) : (
-                    tableData.map((item, index) => (
-                      <tr key={index}>
-                        <td>{formatUserFriendlyTimestamp(item.timestamp)}</td>
-                        <td>{typeof item.humidity === 'number' ? item.humidity.toFixed(1) : item.humidity}</td>
-                        <td>{typeof item.temperature === 'number' ? item.temperature.toFixed(1) : item.temperature}</td>
-                        <td>{typeof item.rainfall === 'number' ? item.rainfall.toFixed(1) : item.rainfall}</td>
-                        <td>{typeof item.windspeed === 'number' ? item.windspeed.toFixed(1) : item.windspeed}</td>
-                        <td>{typeof item.irradiation === 'number' ? Math.round(item.irradiation) : item.irradiation}</td>
-                        <td>{item.windDirection || 'N/A'}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </Table>
+          </Col>
+          <Col md={4} className="text-center">
+            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
+              <TemperatureGauge temperature={typeof gaugeData.temperature === 'number' ? gaugeData.temperature : 0} />
+              <h5>Temperature</h5>
+              <p>{typeof gaugeData.temperature === 'number' ? `${gaugeData.temperature}°C` : gaugeData.temperature}</p>
             </div>
-          </div>
-        </Col>
-      </Row>
-    </Container>
+          </Col>
+          <Col md={4} className="text-center">
+            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
+              <RainfallGauge rainfall={typeof gaugeData.rainfall === 'number' ? gaugeData.rainfall : 0} />
+              <h5>Rainfall</h5>
+              <p>{typeof gaugeData.rainfall === 'number' ? `${gaugeData.rainfall} mm` : gaugeData.rainfall}</p>
+            </div>
+          </Col>
+          <Col md={4} className="text-center">
+            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
+              <WindSpeedGauge windspeed={typeof gaugeData.windspeed === 'number' ? gaugeData.windspeed : 0} />
+              <h5>Wind Speed</h5>
+              <p>{typeof gaugeData.windspeed === 'number' ? `${gaugeData.windspeed} km/h` : gaugeData.windspeed}</p>
+            </div>
+          </Col>
+          <Col md={4} className="text-center">
+            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
+              <IrradiationGauge irradiation={typeof gaugeData.irradiation === 'number' ? gaugeData.irradiation : 0} />
+              <h5>Irradiation</h5>
+              <p>{typeof gaugeData.irradiation === 'number' ? `${gaugeData.irradiation} W/m²` : gaugeData.irradiation}</p>
+            </div>
+          </Col>
+          <Col md={4} className="text-center">
+            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)'}}>
+              <WindDirectionGauge windDirection={gaugeData.angle} />
+              <h5>Wind Direction</h5>
+              <p>
+                {gaugeData.windDirection 
+                  ? `${gaugeData.windDirection} (${gaugeData.angle}°)`
+                  : gaugeData.angle}
+              </p>
+            </div>
+          </Col>
+        </Row>
+        <Row className="mt-5 mb-3">
+          <Col className="text-center">
+            <ButtonGroup>
+              <Button
+                variant={filter === '1d' ? 'primary' : 'outline-primary'}
+                onClick={() => handleFilterChange('1d')}
+              >
+                1 Hari Terakhir
+              </Button>
+              <Button
+                variant={filter === '7d' ? 'primary' : 'outline-primary'}
+                onClick={() => handleFilterChange('7d')}
+              >
+                7 Hari Terakhir
+              </Button>
+              <Button
+                variant={filter === '1m' ? 'primary' : 'outline-primary'}
+                onClick={() => handleFilterChange('1m')}
+              >
+                1 Bulan Terakhir
+              </Button>
+            </ButtonGroup>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <h2 className="text-center" style={{ color: '#007bff' }}>Chart Status</h2>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
+                <TrendChart
+                  data={chartData}
+                  fields={[
+                    { key: 'humidity', label: 'Humidity (%)' },
+                    { key: 'temperature', label: 'Temperature (°C)' },
+                    { key: 'rainfall', label: 'Rainfall (mm)' },
+                    { key: 'windspeed', label: 'Wind Speed (km/h)' },
+                    { key: 'irradiation', label: 'Irradiation (W/m²)' },
+                    { key: 'angle', label: 'Wind Direction (°)' }
+                  ]}
+                />
+            </div>
+          </Col>
+        </Row>
+        <Row className="mt-5">
+          <Col>
+            <h2 className="text-center" style={{ color: '#007bff' }}>Table Status</h2>
+            {tableData.length > 0 && (
+              <div className="text-center mb-3">
+                <small className="text-muted">
+                  <span className="badge bg-primary me-2">Latest</span>
+                  Most recent data entry
+                  <span className="ms-3">
+                    <span className="badge bg-success me-2">Used in Gauge</span>
+                    Data currently displayed in gauges above
+                  </span>
+                </small>
+              </div>
+            )}
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)', overflowX: 'auto' }}>
+              {tableData.length > 0 ? (
+                <Table striped bordered hover variant="light" style={{ marginBottom: 0 }}>
+                  <thead>
+                    <tr>
+                      <th>Status</th>
+                      <th>Timestamp</th>
+                      <th>Humidity (%)</th>
+                      <th>Temperature (°C)</th>
+                      <th>Rainfall (mm)</th>
+                      <th>Wind Speed (km/h)</th>
+                      <th>Irradiation (W/m²)</th>
+                      <th>Wind Direction</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tableData.map((item, index) => {
+                      const isLatest = index === 0;
+                      const isUsedInGauge = (
+                        item.humidity === gaugeData.humidity &&
+                        item.temperature === gaugeData.temperature &&
+                        item.rainfall === gaugeData.rainfall &&
+                        item.windspeed === gaugeData.windspeed &&
+                        item.irradiation === gaugeData.irradiation &&
+                        item.angle === gaugeData.angle
+                      );
+                      return (
+                        <tr key={index}>
+                          <td>
+                            <div className="d-flex flex-column gap-1">
+                              {isLatest && <span className="badge bg-primary">Latest</span>}
+                              {isUsedInGauge && <span className="badge bg-success">Used in Gauge</span>}
+                            </div>
+                          </td>
+                          <td>{formatUserFriendlyTimestamp(item.timestamp)}</td>
+                          <td>{item.humidity}</td>
+                          <td>{item.temperature}</td>
+                          <td>{item.rainfall}</td>
+                          <td>{item.windspeed}</td>
+                          <td>{item.irradiation}</td>
+                          <td>{item.windDirection}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </Table>
+              ) : (
+                <p className="text-center" style={{ color: '#007bff' }}>
+                  {loading ? 'Loading data...' : 'No data available for the selected filter'}
+                </p>
+              )}
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    </section>
   );
 };
 
