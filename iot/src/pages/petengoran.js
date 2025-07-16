@@ -5,6 +5,7 @@ import DashboardSect from '../components/petengoran/Dashboardsect';
 import Download from '../components/petengoran/Download';
 import Sidebar from '../components/petengoran/Sidebar';
 import Station1 from '../components/petengoran/Station1';
+import Station2 from '../components/petengoran/Station2';
 
 const Petengoran = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -47,6 +48,8 @@ const Petengoran = () => {
 
           {/* Station 1 */}
           <Route path="/station1" element={<Station1 />} />
+          {/* Station 2 */}
+          <Route path="/station2" element={<Station2 />} />
 
           {/* Download Data */}
           <Route path="/download" element={<Download />} />

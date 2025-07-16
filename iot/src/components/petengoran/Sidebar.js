@@ -73,6 +73,20 @@ const Sidebar = ({ isOpen }) => {
                 Station 1
               </Link>
             </li>
+            <li style={{ marginBottom: '15px' }}>
+              <Link
+                to="/petengoran/station2"
+                style={{
+                  textDecoration: 'none',
+                  color: '#000',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <FaMapMarkerAlt style={{ marginRight: '10px' }} />
+                Station 2
+              </Link>
+            </li>
             <li>
               <Link
                 to="/petengoran/download"
