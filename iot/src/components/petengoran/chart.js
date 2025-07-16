@@ -11,7 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
-// Ambil hanya 1 data (terbaru) per hari
+// Ambil hanya 1 data (terbaru) per hari (khusus jika ingin, tapi tidak dipakai untuk chart utama)
 const getOneDataPerDay = (data) => {
   const map = {};
   data.forEach(item => {
@@ -27,39 +27,35 @@ const TrendChart = ({ data, fields }) => {
   const [interval, setInterval] = useState(15); // Default interval: 15 minutes
 
   // Filter data berdasarkan interval menit (khusus modal)
-    const filterDataByInterval = (data, intervalMinutes) => {
-      if (!data || data.length === 0) return [];
-      // Urutkan data dari waktu paling awal ke paling akhir
-      const sorted = [...data].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-      const filtered = [];
-      let lastTimestamp = null;
-  
-      sorted.forEach((item) => {
-        const currentTimestamp = new Date(item.timestamp).getTime();
-        if (
-          !lastTimestamp ||
-          currentTimestamp - lastTimestamp >= intervalMinutes * 60 * 1000
-        ) {
-          filtered.push(item);
-          lastTimestamp = currentTimestamp;
-        }
-      });
-  
-      return filtered;
-    };
+  const filterDataByInterval = (data, intervalMinutes) => {
+    if (!data || data.length === 0) return [];
+    // Urutkan data dari waktu paling awal ke paling akhir
+    const sorted = [...data].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    const filtered = [];
+    let lastTimestamp = null;
 
-  // Data untuk chart utama: hanya 1 data per hari
-  const mainChartData = getOneDataPerDay(data);
+    sorted.forEach((item) => {
+      const currentTimestamp = new Date(item.timestamp).getTime();
+      if (
+        !lastTimestamp ||
+        currentTimestamp - lastTimestamp >= intervalMinutes * 60 * 1000
+      ) {
+        filtered.push(item);
+        lastTimestamp = currentTimestamp;
+      }
+    });
+
+    return filtered;
+  };
+
+  // Data untuk chart utama: tampilkan seluruh data hasil filter
+  const mainChartData = data;
 
   // Data untuk modal: gunakan data asli (bukan mainChartData), filter interval
   const modalData =
     showDetail && selectedMetric
       ? filterDataByInterval(data, interval)
       : [];
-    
-  if (showDetail && selectedMetric) {
-    console.log("Modal data by interval:", modalData);
-  }
 
   return (
     <>
@@ -88,7 +84,7 @@ const TrendChart = ({ data, fields }) => {
                   <XAxis
                     dataKey="timestamp"
                     tickFormatter={(value) =>
-                      value ? value.slice(0, 10) : ""
+                      value ? value.replace("T", " ").slice(0, 16) : ""
                     }
                   />
                   <YAxis 

@@ -8,24 +8,7 @@ import TemperatureGauge from './status/TemperaturGauge';
 import WindDirectionGauge from './status/WindDirection';
 import WindSpeedGauge from './status/WindSpeed';
 
-// Helper functions (copy dari Station1.js)
-const getOneDataPerDay = (data) => {
-  const map = {};
-  data.forEach(item => {
-    const date = item.timestamp ? item.timestamp.slice(0,10) : '';
-    if (date) {
-      if (!map[date]) {
-        map[date] = item;
-      }
-    }
-  });
-  return Object.values(map).sort((a,b) => {
-    const timeA = new Date(a.timestamp);
-    const timeB = new Date(b.timestamp);
-    return timeB - timeA;
-  });
-};
-
+// Helper
 const windDirectionToEnglish = (dir) => {
   if (!dir) return '';
   const map = {
@@ -61,15 +44,6 @@ const windDirectionToEnglish = (dir) => {
     'South-Southeast': 'South-Southeast',
   };
   return map[dir] || dir;
-};
-
-const parseTimestamp = (ts) => {
-  if (!ts || typeof ts !== 'string') return ts;
-  const [date, time] = ts.split(' ');
-  if (!date || !time) return ts;
-  const [day, month, year] = date.split('-');
-  const fullYear = year.length === 2 ? '20' + year : year;
-  return `${fullYear}-${month}-${day}T${time}`;
 };
 
 const formatUserFriendlyTimestamp = (timestamp) => {
@@ -125,27 +99,35 @@ const mapApiData = (item) => {
       angle: 'alat rusak',
     };
   }
+  // pyrano adalah irradiation di Station2
   return {
-    timestamp: parseTimestamp(ts),
+    timestamp: ts,
     humidity: isValidValue(item.humidity) ? Number(item.humidity) : 'alat rusak',
     temperature: isValidValue(item.temperature) ? Number(item.temperature) : 'alat rusak',
     rainfall: isValidValue(item.rainfall) ? Number(item.rainfall) : 'alat rusak',
     windspeed: isValidValue(item.windspeed ?? item.wind_speed) ? Number(item.windspeed ?? item.wind_speed) : 'alat rusak',
-    irradiation: isValidValue(item.irradiation) ? Number(item.irradiation) : 'alat rusak',
+    irradiation: isValidValue(item.pyrano) ? Number(item.pyrano) : (isValidValue(item.irradiation) ? Number(item.irradiation) : 'alat rusak'),
     windDirection: windDirectionToEnglish(item.direction ?? ''),
     angle: isValidValue(item.angle) ? Number(item.angle) : 'alat rusak',
   };
 };
 
-// Ganti ENV sesuai Station 2
-console.log('ENV DAILY:', process.env.REACT_APP_API_PETENGORAN_DAILY_STATION2);
-console.log('ENV 1M:', process.env.REACT_APP_API_PETENGORAN_RESAMPLE15M_STATION2);
-const API_MAP = {
-  '1d': process.env.REACT_APP_API_PETENGORAN_DAILY_STATION2,
-  '7d': process.env.REACT_APP_API_PETENGORAN_DAILY_STATION2,
-  '1m': process.env.REACT_APP_API_PETENGORAN_RESAMPLE15M_STATION2,
-};
-console.log('API_MAP PETENGORAN:', API_MAP);
+function filterByRange(data, filter) {
+  if (!Array.isArray(data)) return [];
+  const now = new Date();
+  let minDate;
+  if (filter === '1d') minDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  else if (filter === '7d') minDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  else if (filter === '1m') minDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  else minDate = null;
+
+  return minDate
+    ? data.filter(d => {
+        const t = new Date(d.timestamp);
+        return t >= minDate && t <= now;
+      })
+    : data;
+}
 
 const Station2 = () => {
   const [filter, setFilter] = useState('1d');
@@ -165,79 +147,16 @@ const Station2 = () => {
   });
   const [dataStatus, setDataStatus] = useState('');
 
-  const determineGaugeData = (data) => {
-    if (!data || data.length === 0) {
-      setDataStatus('No data available');
-      return {
-        humidity: 0,
-        temperature: 0,
-        rainfall: 0,
-        windspeed: 0,
-        irradiation: 0,
-        windDirection: '',
-        angle: 0
-      };
-    }
-    const sortedData = [...data].sort((a, b) => {
-      const timeA = new Date(a.timestamp);
-      const timeB = new Date(b.timestamp);
-      return timeB - timeA;
-    });
-    let validData = null;
-    let latestEntryIndex = -1;
-    for (let i = 0; i < sortedData.length; i++) {
-      const item = sortedData[i];
-      if (!item.timestamp || item.timestamp === 'error' || item.timestamp === 'alat rusak' || isNaN(new Date(item.timestamp).getTime())) {
-        continue;
-      }
-      const isValidData = (
-        isValidValue(item.humidity) &&
-        isValidValue(item.temperature) &&
-        isValidValue(item.rainfall) &&
-        isValidValue(item.windspeed) &&
-        isValidValue(item.irradiation) &&
-        isValidValue(item.angle)
-      );
-      if (isValidData) {
-        validData = item;
-        latestEntryIndex = i;
-        break;
-      }
-    }
-    if (!validData) {
-      setDataStatus('No valid data available');
-      return {
-        humidity: 0,
-        temperature: 0,
-        rainfall: 0,
-        windspeed: 0,
-        irradiation: 0,
-        windDirection: '',
-        angle: 0
-      };
-    }
-    if (latestEntryIndex === 0) {
-      setDataStatus('Using latest data for gauges');
-    } else {
-      setDataStatus(`Using data from ${latestEntryIndex + 1} entries ago (${formatUserFriendlyTimestamp(validData.timestamp)})`);
-    }
-    return {
-      humidity: validData.humidity,
-      temperature: validData.temperature,
-      rainfall: validData.rainfall,
-      windspeed: validData.windspeed,
-      irradiation: validData.irradiation,
-      windDirection: validData.windDirection,
-      angle: validData.angle
-    };
-  };
+  // Only use 15m resample for all filter
+  const API_URL = process.env.REACT_APP_API_PETENGORAN_RESAMPLE15M_STATION2;
 
-  const fetchData = async (filterType) => {
+  // Fetch data dari API 15m untuk semua filter
+  const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const url = API_MAP[filterType];
-      if (!url) throw new Error(`No API URL configured for filter: ${filterType}`);
+      const url = API_URL;
+      if (!url) throw new Error(`No API URL configured`);
       const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
@@ -251,11 +170,43 @@ const Station2 = () => {
         return timeB - timeA;
       });
       setAllData(mapped);
-      const newGaugeData = determineGaugeData(mapped);
-      setGaugeData(newGaugeData);
-    } catch (error) {
-      setError(`Failed to fetch data: ${error.message}`);
+    } catch (err) {
+      setError(`Failed to fetch data: ${err.message}`);
       setAllData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    // Filter data sesuai range
+    const filtered = filterByRange(allData, filter);
+    setFilteredData(filtered);
+
+    // Table: urutkan terbaru ke terlama
+    setTableData([...filtered].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+
+    // Gauge: ambil data terbaru yang timestamp valid
+    const latest = filtered.find(
+      item => item.timestamp && item.timestamp !== 'error' && item.timestamp !== 'alat rusak' && !isNaN(new Date(item.timestamp).getTime())
+    );
+    if (latest) {
+      setGaugeData({
+        humidity: latest.humidity,
+        temperature: latest.temperature,
+        rainfall: latest.rainfall,
+        windspeed: latest.windspeed,
+        irradiation: latest.irradiation,
+        windDirection: latest.windDirection,
+        angle: latest.angle
+      });
+      setDataStatus('Using latest data for gauges');
+    } else {
       setGaugeData({
         humidity: 0,
         temperature: 0,
@@ -265,35 +216,11 @@ const Station2 = () => {
         windDirection: '',
         angle: 0
       });
-      setDataStatus('Error loading data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFilterChange = (filterType) => {
-    setFilter(filterType);
-    fetchData(filterType);
-  };
-
-  useEffect(() => {
-    fetchData(filter);
-    // eslint-disable-next-line
-  }, []);
-
-  useEffect(() => {
-    setFilteredData(allData);
-    if (filter === '7d' || filter === '1m') {
-      setTableData(getOneDataPerDay(allData));
-    } else {
-      setTableData(allData);
-    }
-    if (allData.length > 0) {
-      const newGaugeData = determineGaugeData(allData);
-      setGaugeData(newGaugeData);
+      setDataStatus('No valid data available');
     }
   }, [allData, filter]);
 
+  // Prepare chart data (sort chronologically for better chart visualization)
   const chartData = [...filteredData].sort((a, b) => {
     if (a.timestamp === 'error' || a.timestamp === 'alat rusak' || b.timestamp === 'error' || b.timestamp === 'alat rusak') {
       return 0;
@@ -393,19 +320,19 @@ const Station2 = () => {
             <ButtonGroup>
               <Button
                 variant={filter === '1d' ? 'primary' : 'outline-primary'}
-                onClick={() => handleFilterChange('1d')}
+                onClick={() => setFilter('1d')}
               >
                 1 Hari Terakhir
               </Button>
               <Button
                 variant={filter === '7d' ? 'primary' : 'outline-primary'}
-                onClick={() => handleFilterChange('7d')}
+                onClick={() => setFilter('7d')}
               >
                 7 Hari Terakhir
               </Button>
               <Button
                 variant={filter === '1m' ? 'primary' : 'outline-primary'}
-                onClick={() => handleFilterChange('1m')}
+                onClick={() => setFilter('1m')}
               >
                 1 Bulan Terakhir
               </Button>
