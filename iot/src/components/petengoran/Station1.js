@@ -7,6 +7,8 @@ import RainfallGauge from './status/Rainfall';
 import TemperatureGauge from './status/TemperaturGauge';
 import WindDirectionGauge from './status/WindDirection';
 import WindSpeedGauge from './status/WindSpeed';
+import AirPressureGauge from './status/AirPressure';
+import WaterTemperatureGauge from './status/WaterTemperature';
 
 // Helper
 const windDirectionToEnglish = (dir) => {
@@ -42,6 +44,8 @@ const windDirectionToEnglish = (dir) => {
     'West-Southwest': 'West-Southwest',
     'South-Southwest': 'South-Southwest',
     'South-Southeast': 'South-Southeast',
+    'Utara Barat Laut': 'North-Northwest',
+    'Utara Timur Laut': 'North-Northeast',
   };
   return map[dir] || dir;
 };
@@ -84,6 +88,9 @@ const mapApiData = (item) => {
       irradiation: 'error',
       windDirection: 'error',
       angle: 'error',
+      bmptemperature: 'error',
+      airpressure: 'error',
+      suhuair: 'error',
     };
   }
   const ts = item.timestamp;
@@ -97,6 +104,9 @@ const mapApiData = (item) => {
       irradiation: 'alat rusak',
       windDirection: 'alat rusak',
       angle: 'alat rusak',
+      bmptemperature: 'alat rusak',
+      airpressure: 'alat rusak',
+      suhuair: 'alat rusak',
     };
   }
   return {
@@ -108,6 +118,9 @@ const mapApiData = (item) => {
     irradiation: isValidValue(item.irradiation) ? Number(item.irradiation) : 'alat rusak',
     windDirection: windDirectionToEnglish(item.direction ?? ''),
     angle: isValidValue(item.angle) ? Number(item.angle) : 'alat rusak',
+    bmptemperature: isValidValue(item.bmptemperature) ? Number(item.bmptemperature) : 'alat rusak',
+    airpressure: isValidValue(item.airpressure) ? Number(item.airpressure) : 'alat rusak',
+    suhuair: isValidValue(item.suhuair) ? Number(item.suhuair) : 'alat rusak',
   };
 };
 
@@ -142,7 +155,10 @@ const Station1 = () => {
     windspeed: 0,
     irradiation: 0,
     windDirection: '',
-    angle: 0
+    angle: 0,
+    bmptemperature: 0,
+    airpressure: 0,
+    suhuair: 0,
   });
   const [dataStatus, setDataStatus] = useState('');
 
@@ -202,7 +218,10 @@ const Station1 = () => {
         windspeed: latest.windspeed,
         irradiation: latest.irradiation,
         windDirection: latest.windDirection,
-        angle: latest.angle
+        angle: latest.angle,
+        bmptemperature: latest.bmptemperature,
+        airpressure: latest.airpressure,
+        suhuair: latest.suhuair,
       });
       setDataStatus('Using latest data for gauges');
     } else {
@@ -213,7 +232,10 @@ const Station1 = () => {
         windspeed: 0,
         irradiation: 0,
         windDirection: '',
-        angle: 0
+        angle: 0,
+        bmptemperature: 0,
+        airpressure: 0,
+        suhuair: 0,
       });
       setDataStatus('No valid data available');
     }
@@ -267,42 +289,42 @@ const Station1 = () => {
           </Col>
         </Row>
         <Row className="g-4">
-          <Col md={4} className="text-center">
+          <Col md={3} className="text-center">
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
               <HumidityGauge humidity={typeof gaugeData.humidity === 'number' ? gaugeData.humidity : 0} />
               <h5>Humidity</h5>
               <p>{typeof gaugeData.humidity === 'number' ? `${gaugeData.humidity}%` : gaugeData.humidity}</p>
             </div>
           </Col>
-          <Col md={4} className="text-center">
+          <Col md={3} className="text-center">
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
               <TemperatureGauge temperature={typeof gaugeData.temperature === 'number' ? gaugeData.temperature : 0} />
               <h5>Temperature</h5>
               <p>{typeof gaugeData.temperature === 'number' ? `${gaugeData.temperature}°C` : gaugeData.temperature}</p>
             </div>
           </Col>
-          <Col md={4} className="text-center">
+          <Col md={3} className="text-center">
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
               <RainfallGauge rainfall={typeof gaugeData.rainfall === 'number' ? gaugeData.rainfall : 0} />
               <h5>Rainfall</h5>
               <p>{typeof gaugeData.rainfall === 'number' ? `${gaugeData.rainfall} mm` : gaugeData.rainfall}</p>
             </div>
           </Col>
-          <Col md={4} className="text-center">
+          <Col md={3} className="text-center">
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
               <WindSpeedGauge windspeed={typeof gaugeData.windspeed === 'number' ? gaugeData.windspeed : 0} />
               <h5>Wind Speed</h5>
               <p>{typeof gaugeData.windspeed === 'number' ? `${gaugeData.windspeed} km/h` : gaugeData.windspeed}</p>
             </div>
           </Col>
-          <Col md={4} className="text-center">
+          <Col md={3} className="text-center">
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
               <IrradiationGauge irradiation={typeof gaugeData.irradiation === 'number' ? gaugeData.irradiation : 0} />
               <h5>Irradiation</h5>
               <p>{typeof gaugeData.irradiation === 'number' ? `${gaugeData.irradiation} W/m²` : gaugeData.irradiation}</p>
             </div>
           </Col>
-          <Col md={4} className="text-center">
+          <Col md={3} className="text-center">
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)'}}>
               <WindDirectionGauge windDirection={gaugeData.angle} />
               <h5>Wind Direction</h5>
@@ -311,6 +333,27 @@ const Station1 = () => {
                   ? `${gaugeData.windDirection} (${gaugeData.angle}°)`
                   : gaugeData.angle}
               </p>
+            </div>
+          </Col>
+          <Col md={3} className="text-center">
+            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
+              <AirPressureGauge airPressure={typeof gaugeData.airpressure === 'number' ? gaugeData.airpressure : 0} />
+              <h5>Air Pressure</h5>
+              <p>{typeof gaugeData.airpressure === 'number' ? `${gaugeData.airpressure} hPa` : gaugeData.airpressure}</p>
+            </div>
+          </Col>
+          <Col md={3} className="text-center">
+            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
+              <TemperatureGauge temperature={typeof gaugeData.bmptemperature === 'number' ? gaugeData.bmptemperature : 0} />
+              <h5>BMP Temperature</h5>
+              <p>{typeof gaugeData.bmptemperature === 'number' ? `${gaugeData.bmptemperature}°C` : gaugeData.bmptemperature}</p>
+            </div>
+          </Col>
+          <Col md={3} className="text-center">
+            <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
+              <WaterTemperatureGauge waterTemperature={typeof gaugeData.suhuair === 'number' ? gaugeData.suhuair : 0} />
+              <h5>Water Temperature</h5>
+              <p>{typeof gaugeData.suhuair === 'number' ? `${gaugeData.suhuair}°C` : gaugeData.suhuair}</p>
             </div>
           </Col>
         </Row>
@@ -354,7 +397,10 @@ const Station1 = () => {
                     { key: 'rainfall', label: 'Rainfall (mm)' },
                     { key: 'windspeed', label: 'Wind Speed (km/h)' },
                     { key: 'irradiation', label: 'Irradiation (W/m²)' },
-                    { key: 'angle', label: 'Wind Direction (°)' }
+                    { key: 'angle', label: 'Wind Direction (°)' },
+                    { key: 'airpressure', label: 'Air Pressure (hPa)' },
+                    { key: 'bmptemperature', label: 'BMP Temperature (°C)' },
+                    { key: 'suhuair', label: 'Water Temperature (°C)' },
                   ]}
                 />
             </div>
@@ -392,6 +438,9 @@ const Station1 = () => {
                       <th>Wind Speed (km/h)</th>
                       <th>Irradiation (W/m²)</th>
                       <th>Wind Direction</th>
+                      <th>Air Pressure (hPa)</th>
+                      <th>BMP Temperature (°C)</th>
+                      <th>Water Temperature (°C)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -403,7 +452,10 @@ const Station1 = () => {
                         item.rainfall === gaugeData.rainfall &&
                         item.windspeed === gaugeData.windspeed &&
                         item.irradiation === gaugeData.irradiation &&
-                        item.angle === gaugeData.angle
+                        item.angle === gaugeData.angle &&
+                        item.airpressure === gaugeData.airpressure &&
+                        item.bmptemperature === gaugeData.bmptemperature &&
+                        item.suhuair === gaugeData.suhuair
                       );
                       return (
                         <tr key={index}>
@@ -420,6 +472,9 @@ const Station1 = () => {
                           <td>{item.windspeed}</td>
                           <td>{item.irradiation}</td>
                           <td>{item.windDirection}</td>
+                          <td>{item.airpressure}</td>
+                          <td>{item.bmptemperature}</td>
+                          <td>{item.suhuair}</td>
                         </tr>
                       );
                     })}
