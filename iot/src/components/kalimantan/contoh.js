@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Button, Form } from 'react-bootstrap';
 import { saveAs } from 'file-saver';
-import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useState } from 'react';
+import { Button, Col, Container, Form, Row } from 'react-bootstrap';
+import * as XLSX from 'xlsx';
 
 const Download = () => {
-  const [selectedStation, setSelectedStation] = useState('Station 1');
+  // Hanya Station 1 yang digunakan
+  const selectedStation = 'Station 1';
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [fileFormat, setFileFormat] = useState('excel');
@@ -65,7 +66,7 @@ const Download = () => {
   };
 
   const getStationData = () => {
-    return selectedStation === 'Station 1' ? station1Data : station2Data;
+    return station1Data;
   };
 
   const filterDataByDate = (data) => {
@@ -77,13 +78,9 @@ const Download = () => {
     });
   };
 
-  // Data untuk Station 1 dan Station 2
+  // Data untuk Station 1 saja
   const station1Data = [
     { timestamp: '2025-03-01', humidity: 65, temperature: 28, airPressure: 1012, irradiation: 500, oxygen: 21, rainfall: 10, windspeed: 15, windDirection: 'N' },
-    // Tambahkan data lainnya...
-  ];
-  const station2Data = [
-    { timestamp: '2025-03-08', humidity: 69, temperature: 29, airPressure: 1012, irradiation: 505, oxygen: 20.8, rainfall: 4, windspeed: 10, windDirection: 'NE' },
     // Tambahkan data lainnya...
   ];
 
@@ -168,22 +165,10 @@ const Download = () => {
         </Col>
       </Row>
 
+      {/* Hapus tombol Station 2, hanya tampilkan judul Station 1 */}
       <Row className="mt-4 d-flex justify-content-center">
         <Col md={6} className="text-center">
-          <Button
-            variant={selectedStation === 'Station 1' ? 'primary' : 'outline-primary'}
-            onClick={() => setSelectedStation('Station 1')}
-            className={`me-3 px-4 py-2 fw-bold shadow-sm ${selectedStation === 'Station 1' ? 'active-btn' : ''}`}
-          >
-            Station 1
-          </Button>
-          <Button
-            variant={selectedStation === 'Station 2' ? 'primary' : 'outline-primary'}
-            onClick={() => setSelectedStation('Station 2')}
-            className={`px-4 py-2 fw-bold shadow-sm ${selectedStation === 'Station 2' ? 'active-btn' : ''}`}
-          >
-            Station 2
-          </Button>
+          <h5 className="fw-bold text-primary">Station 1</h5>
         </Col>
       </Row>
 
