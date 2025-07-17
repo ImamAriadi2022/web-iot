@@ -119,18 +119,23 @@ const mapApiData = (item) => {
 };
 
 function filterByRange(data, filter) {
-  if (!Array.isArray(data)) return [];
-  const now = new Date();
+  if (!Array.isArray(data) || data.length === 0) return [];
+  // Cari timestamp terbaru dari data (bukan waktu sekarang)
+  const timestamps = data
+    .map(d => new Date(d.timestamp))
+    .filter(d => !isNaN(d.getTime()));
+  if (timestamps.length === 0) return [];
+  const maxDate = new Date(Math.max(...timestamps));
   let minDate;
-  if (filter === '1d') minDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  else if (filter === '7d') minDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  else if (filter === '1m') minDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  if (filter === '1d') minDate = new Date(maxDate.getTime() - 24 * 60 * 60 * 1000);
+  else if (filter === '7d') minDate = new Date(maxDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+  else if (filter === '1m') minDate = new Date(maxDate.getTime() - 30 * 24 * 60 * 60 * 1000);
   else minDate = null;
 
   return minDate
     ? data.filter(d => {
         const t = new Date(d.timestamp);
-        return t >= minDate && t <= now;
+        return t >= minDate && t <= maxDate;
       })
     : data;
 }

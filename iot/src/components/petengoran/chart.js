@@ -11,47 +11,30 @@ import {
   YAxis,
 } from "recharts";
 
-// Ambil hanya 1 data (terbaru) per hari (khusus jika ingin, tapi tidak dipakai untuk chart utama)
-const getOneDataPerDay = (data) => {
-  const map = {};
-  data.forEach(item => {
-    const date = item.timestamp ? item.timestamp.slice(0, 10) : '';
-    if (date) map[date] = item;
-  });
-  return Object.values(map).sort((a, b) => a.timestamp.localeCompare(b.timestamp));
-};
+// Fungsi ini tidak dipakai lagi untuk chart utama
+// const getOneDataPerDay = (data) => { ... }
 
 const TrendChart = ({ data, fields }) => {
   const [showDetail, setShowDetail] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState(null);
   const [interval, setInterval] = useState(15); // Default interval: 15 minutes
 
-  // Filter data berdasarkan interval menit (khusus modal)
+  // Untuk chart utama: tampilkan semua data hasil filter waktu
+  const mainChartData = data;
+
+  // Untuk modal detail: filter interval jika ingin, atau tampilkan semua data
   const filterDataByInterval = (data, intervalMinutes) => {
     if (!data || data.length === 0) return [];
     // Urutkan data dari waktu paling awal ke paling akhir
     const sorted = [...data].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-    const filtered = [];
-    let lastTimestamp = null;
-
-    sorted.forEach((item) => {
-      const currentTimestamp = new Date(item.timestamp).getTime();
-      if (
-        !lastTimestamp ||
-        currentTimestamp - lastTimestamp >= intervalMinutes * 60 * 1000
-      ) {
-        filtered.push(item);
-        lastTimestamp = currentTimestamp;
-      }
+    // Jika data sudah berinterval 15/30 menit, bisa langsung return sorted
+    // Jika ingin filter berdasarkan menit pada jam:
+    return sorted.filter(item => {
+      const date = new Date(item.timestamp);
+      return date.getMinutes() % intervalMinutes === 0;
     });
-
-    return filtered;
   };
 
-  // Data untuk chart utama: tampilkan seluruh data hasil filter
-  const mainChartData = data;
-
-  // Data untuk modal: gunakan data asli (bukan mainChartData), filter interval
   const modalData =
     showDetail && selectedMetric
       ? filterDataByInterval(data, interval)

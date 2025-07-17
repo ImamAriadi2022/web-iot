@@ -4,9 +4,9 @@ import { Button, Col, Container, Form, Modal, Row } from 'react-bootstrap';
 import { fillDataGaps, generateConsistentIntervalData, smoothData } from '../../utils/dataInterpolation';
 import { resampleTimeSeries } from '../../utils/timeSeriesResampler';
 
-// API endpoint untuk Petengoran Station 1 & 2
-const API_PETENGORAN_ONEMONTH = process.env.REACT_APP_API_PETENGORAN + 'data/onemonth';
-const API_PETENGORAN2_ONEMONTH = process.env.REACT_APP_API_PETENGORAN2 + 'data/onemonth';
+// Endpoint mengikuti Station1.js dan Station2.js
+const API_STATION1 = process.env.REACT_APP_API_PETENGORAN_RESAMPLE15M_STATION1;
+const API_STATION2 = process.env.REACT_APP_API_PETENGORAN_RESAMPLE15M_STATION2;
 
 // Fungsi parsing timestamp agar bisa dibandingkan dengan filter tanggal
 const parseTimestamp = (ts) => {
@@ -21,7 +21,6 @@ const parseTimestamp = (ts) => {
   return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${time}`;
 };
 
-// Fungsi untuk format tanggal yang user-friendly
 const formatUserFriendlyDate = (timestamp) => {
   if (!timestamp) return 'Invalid Date';
   try {
@@ -124,11 +123,11 @@ const mapStation2 = (item) => {
     angle: item.angle ?? 0,
     bmptemperature: item.bmptemperature ?? 0,
     airpressure: item.airpressure ?? 0,
+    suhuair: item.suhuair ?? 0, // <-- Tambahkan agar field suhuair selalu ada
     invalid: false,
   };
 };
 
-// Format data untuk CSV sesuai station
 const formatDataForCSV = (data, stationType) => {
   if (!Array.isArray(data) || data.length === 0) return [];
   return data.map((item, index) => {
@@ -146,14 +145,12 @@ const formatDataForCSV = (data, stationType) => {
       'BMP Temperature (°C)': parseFloat(item.bmptemperature || 0).toFixed(1),
       'Air Pressure (hPa)': parseFloat(item.airpressure || 0).toFixed(2),
     };
-    if (stationType === 'Station 1') {
-      formattedData['Water Temperature (°C)'] = parseFloat(item.suhuair || 0).toFixed(1);
-    }
+    // Selalu tambahkan Water Temperature untuk kedua station
+    formattedData['Water Temperature (°C)'] = parseFloat(item.suhuair || 0).toFixed(1);
     return formattedData;
   });
 };
 
-// Membuat CSV yang terformat dengan baik
 const createFormattedCSV = (data, stationType) => {
   if (!data || data.length === 0) return '';
   const csvData = formatDataForCSV(data, stationType);
@@ -203,16 +200,16 @@ const Download = () => {
         setLoading(true);
         setDataReady(false);
 
-        // Fetch Petengoran Station 1 data
-        const res1 = await fetch(API_PETENGORAN_ONEMONTH);
-        const json1 = res1.ok ? await res1.json() : { result: [] };
-        const station1Data = Array.isArray(json1.result) ? json1.result.map(mapStation1) : [];
+        // Fetch Station 1
+        const res1 = await fetch(API_STATION1);
+        const json1 = res1.ok ? await res1.json() : { data: { result: [] } };
+        const station1Data = Array.isArray(json1.data?.result) ? json1.data.result.map(mapStation1) : [];
         setStation1Data(station1Data);
 
-        // Fetch Petengoran Station 2 data
-        const res2 = await fetch(API_PETENGORAN2_ONEMONTH);
-        const json2 = res2.ok ? await res2.json() : { result: [] };
-        const station2Data = Array.isArray(json2.result) ? json2.result.map(mapStation2) : [];
+        // Fetch Station 2
+        const res2 = await fetch(API_STATION2);
+        const json2 = res2.ok ? await res2.json() : { data: { result: [] } };
+        const station2Data = Array.isArray(json2.data?.result) ? json2.data.result.map(mapStation2) : [];
         setStation2Data(station2Data);
 
         setDataReady(true);
@@ -230,6 +227,39 @@ const Download = () => {
   const handleDownload = () => {
     setShowLogin(true);
   };
+
+  // Fungsi untuk cek tanggal yang tidak ada data
+const getMissingDates = (data, startDate, endDate) => {
+  if (!startDate || !endDate) return [];
+  const dateSet = new Set(
+    data.map(item => {
+      if (!item.timestamp) return null;
+      return item.timestamp.slice(0, 10);
+    }).filter(Boolean)
+  );
+  const missing = [];
+  let current = startDate;
+  while (current <= endDate) {
+    if (!dateSet.has(current)) {
+      missing.push(current);
+    }
+    // Tambah 1 hari secara manual (tanpa Date object)
+    const [y, m, d] = current.split('-').map(Number);
+    let year = y, month = m, day = d + 1;
+    // Penyesuaian akhir bulan/tahun
+    const daysInMonth = new Date(year, month, 0).getDate();
+    if (day > daysInMonth) {
+      day = 1;
+      month += 1;
+      if (month > 12) {
+        month = 1;
+        year += 1;
+      }
+    }
+    current = `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+  }
+  return missing;
+};
 
   const processDownload = () => {
     if (!dataReady) {
@@ -255,7 +285,15 @@ const Download = () => {
       return;
     }
     if (data.length === 0) {
-      alert('No data available for the selected date range.');
+      const missingDates = getMissingDates(rawData, startDate, endDate);
+      if (missingDates.length > 0) {
+        alert(
+          `No data available for the selected date range.\n` +
+          `Tanggal berikut tidak ada data:\n${missingDates.join(', ')}`
+        );
+      } else {
+        alert('No data available for the selected date range.');
+      }
       return;
     }
 
@@ -280,9 +318,8 @@ const Download = () => {
       try {
         let fields = [
           'humidity', 'temperature', 'rainfall', 'windspeed', 'irradiation',
-          'windDirection', 'angle', 'bmptemperature', 'airpressure'
+          'windDirection', 'angle', 'bmptemperature', 'airpressure', 'suhuair'
         ];
-        if (selectedStation === 'Station 1') fields.push('suhuair');
         data = resampleTimeSeries(data, resampleInterval, resampleMethod, fields);
         if (data.length === 0) {
           alert('No data available after resampling.');
@@ -338,11 +375,9 @@ const Download = () => {
             arahAngin: item.windDirection || '',
             sudutAngin: `${parseFloat(item.angle || 0).toFixed(0)}°`,
             bmpTemperature: `${parseFloat(item.bmptemperature || 0).toFixed(1)}°C`,
-            airPressure: `${parseFloat(item.airpressure || 0).toFixed(2)} hPa`
+            airPressure: `${parseFloat(item.airpressure || 0).toFixed(2)} hPa`,
+            waterTemperature: `${parseFloat(item.suhuair || 0).toFixed(1)}°C`
           };
-          if (selectedStation === 'Station 1') {
-            base.waterTemperature = `${parseFloat(item.suhuair || 0).toFixed(1)}°C`;
-          }
           return base;
         })
       };
@@ -372,17 +407,14 @@ const Download = () => {
     return selectedStation === 'Station 1' ? station1Data : station2Data;
   };
 
-  const filterDataByDate = (data) => {
-    if (!startDate || !endDate) return [];
-    const start = new Date(`${startDate}T00:00:00`);
-    const end = new Date(`${endDate}T23:59:59`);
-    return data.filter((item) => {
-      if (!item.timestamp) return false;
-      const itemDate = new Date(item.timestamp);
-      if (isNaN(itemDate.getTime())) return false;
-      return itemDate >= start && itemDate <= end;
-    });
-  };
+const filterDataByDate = (data) => {
+  if (!startDate || !endDate) return [];
+  return data.filter((item) => {
+    if (!item.timestamp) return false;
+    const itemYMD = item.timestamp.slice(0, 10); // YYYY-MM-DD
+    return itemYMD >= startDate && itemYMD <= endDate;
+  });
+};
 
   return (
     <Container style={{ marginTop: '20px' }}>
