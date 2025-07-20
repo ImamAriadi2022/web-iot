@@ -1,115 +1,11 @@
 import { saveAs } from 'file-saver';
 import { useEffect, useState } from 'react';
 import { Button, Col, Container, Form, Modal, Row } from 'react-bootstrap';
-import { fillDataGaps, generateConsistentIntervalData, smoothData } from '../../utils/dataInterpolation';
-import { resampleTimeSeries } from '../../utils/timeSeriesResampler';
 
-// API endpoint untuk Station 1 (ambil dari .env, sama seperti Station1.js)
+// API endpoint untuk Station 1
 const API_KALIMANTAN_TOPIC1 = process.env.REACT_APP_API_KALIMANTAN_ONEMONTH_TOPIC1;
 
-// Fungsi parsing timestamp agar bisa dibandingkan dengan filter tanggal
-const parseTimestamp = (ts) => {
-  if (!ts) return ts;
-  
-  // Jika sudah dalam format ISO (contoh: 2025-06-30T10:10:00), return as is
-  if (typeof ts === 'string' && ts.includes('T')) {
-    return ts;
-  }
-  
-  // Format backend: '28-05-25 11:49:00' (DD-MM-YY HH:mm:ss)
-  if (typeof ts !== 'string') return ts;
-  const [date, time] = ts.split(' ');
-  if (!date || !time) return ts;
-  const [day, month, year] = date.split('-');
-  if (!day || !month || !year) return ts;
-  const fullYear = year.length === 2 ? '20' + year : year;
-  // Format ISO agar bisa diparse oleh new Date()
-  return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${time}`;
-};
-
-// Fungsi untuk format tanggal yang user-friendly
-const formatUserFriendlyDate = (timestamp) => {
-  if (!timestamp) return 'Invalid Date';
-  
-  try {
-    const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return 'Invalid Date';
-    
-    // Format: "30 Juni 2025, 14:30:45"
-    const options = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      timeZone: 'Asia/Jakarta'
-    };
-    
-    return date.toLocaleDateString('id-ID', options);
-  } catch {
-    return 'Invalid Date';
-  }
-};
-
-// Fungsi untuk format data menjadi tabel CSV yang rapi
-const formatDataForCSV = (data, stationType) => {
-  if (!Array.isArray(data) || data.length === 0) return [];
-  
-  return data.map((item, index) => {
-    const formattedData = {
-      'No': index + 1,
-      'Tanggal & Waktu': formatUserFriendlyDate(item.timestamp),
-      'Status': item.interpolated ? 'Estimasi' : 'Aktual',
-      'Kelembapan (%)': parseFloat(item.humidity || 0).toFixed(1),
-      'Suhu (°C)': parseFloat(item.temperature || 0).toFixed(1),
-    };
-    
-    // Tambahkan kolom khusus untuk Station 1
-    if (stationType === 'Station 1') {
-      formattedData['Curah Hujan (mm)'] = parseFloat(item.rainfall || 0).toFixed(1);
-      formattedData['Kecepatan Angin (m/s)'] = parseFloat(item.windspeed || 0).toFixed(1);
-      formattedData['Radiasi Matahari (W/m²)'] = parseFloat(item.irradiation || 0).toFixed(0);
-      formattedData['Arah Angin'] = item.windDirection || '';
-      formattedData['Sudut Angin (°)'] = parseFloat(item.angle || 0).toFixed(0);
-    }
-    
-    return formattedData;
-  });
-};
-
-// Fungsi untuk membuat CSV yang terformat dengan baik
-const createFormattedCSV = (data, stationType) => {
-  if (!data || data.length === 0) return '';
-  
-  const csvData = formatDataForCSV(data, stationType);
-  
-  // Header dengan spasi yang rapi
-  const headers = Object.keys(csvData[0]);
-  const headerRow = headers.map(header => `"${header}"`).join(',');
-  
-  // Data rows dengan formatting yang konsisten
-  const dataRows = csvData.map(row => 
-    headers.map(header => {
-      const value = row[header];
-      // Wrap dalam quotes untuk konsistensi dan handle comma
-      return `"${value}"`;
-    }).join(',')
-  );
-  
-  // Tambahkan metadata di awal file
-  const metadata = [
-    `"=== DATA MONITORING STATION ${stationType.toUpperCase()} ==="`,
-    `"Diekspor pada: ${formatUserFriendlyDate(new Date().toISOString())}"`,
-    `"Total Records: ${data.length}"`,
-    `"Status: Aktual = Data asli dari sensor, Estimasi = Data hasil interpolasi"`,
-    '""', // Empty line
-    headerRow
-  ];
-  
-  return [...metadata, ...dataRows].join('\n');
-};
-
+// Helper: Wind direction mapping
 const windDirectionToEnglish = (dir) => {
   if (!dir) return '';
   const map = {
@@ -147,36 +43,155 @@ const windDirectionToEnglish = (dir) => {
   return map[dir] || dir;
 };
 
+// Helper: Parse timestamp (format: DD-MM-YY HH:mm:ss)
+const parseTimestamp = (ts) => {
+  if (!ts || typeof ts !== 'string') return ts;
+  const match = ts.match(/^(\d{2})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/);
+  if (match) {
+    // 20 = tanggal, 07 = bulan, 25 = tahun (2025)
+    const day = match[1];
+    const month = match[2];
+    const year = 2000 + parseInt(match[3], 10); // 25 => 2025
+    const time = match[4];
+    return `${year}-${month}-${day}T${time}`;
+  }
+  // Jika sudah ISO, return as is
+  if (ts.includes('T')) return ts;
+  return ts;
+};
+
+// Helper: Format tanggal user-friendly
+const formatUserFriendlyDate = (timestamp) => {
+  if (!timestamp) return 'Invalid Date';
+  try {
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZone: 'Asia/Jakarta'
+    };
+    return date.toLocaleDateString('id-ID', options);
+  } catch {
+    return 'Invalid Date';
+  }
+};
+
+// Helper: Map API data
 const mapStation1 = (item) => {
   if (!item) return {};
-  // Jika timestamp invalid atau alat rusak, return flag khusus
-  if (
-    !item.timestamp ||
-    item.timestamp === 'Invalid date' ||
-    item.timestamp === 'alat rusak'
-  ) {
-    return { ...item, invalid: true };
-  }
-  
-  const ts = item.timestamp;
-  const parsedTs = parseTimestamp(ts);
-  
+  const ts = parseTimestamp(item.timestamp);
   return {
-    timestamp: parsedTs,
-    userFriendlyDate: formatUserFriendlyDate(parsedTs),
+    timestamp: ts,
+    userFriendlyDate: formatUserFriendlyDate(ts),
     humidity: item.humidity ?? item.hum_dht22 ?? 0,
     temperature: item.temperature ?? item.temp_dht22 ?? 0,
     rainfall: item.rainfall ?? 0,
-    windspeed: item.wind_speed ?? 0,
+    windspeed: item.windspeed ?? item.wind_speed ?? 0,
     irradiation: item.irradiation ?? 0,
     windDirection: windDirectionToEnglish(item.direction ?? ''),
     angle: item.angle ?? 0,
-    invalid: false,
   };
 };
 
+// Helper: Format data for CSV
+const formatDataForCSV = (data) => {
+  if (!Array.isArray(data) || data.length === 0) return [];
+  return data.map((item, index) => ({
+    'No': index + 1,
+    'Tanggal & Waktu': item.userFriendlyDate,
+    'Kelembapan (%)': parseFloat(item.humidity || 0).toFixed(1),
+    'Suhu (°C)': parseFloat(item.temperature || 0).toFixed(1),
+    'Curah Hujan (mm)': parseFloat(item.rainfall || 0).toFixed(1),
+    'Kecepatan Angin (km/h)': parseFloat(item.windspeed || 0).toFixed(1),
+    'Radiasi Matahari (W/m²)': parseFloat(item.irradiation || 0).toFixed(0),
+    'Arah Angin': item.windDirection || '',
+    'Sudut Angin (°)': parseFloat(item.angle || 0).toFixed(0),
+  }));
+};
+
+// Helper: Create CSV string
+const createFormattedCSV = (data) => {
+  if (!data || data.length === 0) return '';
+  const csvData = formatDataForCSV(data);
+  const headers = Object.keys(csvData[0]);
+  const headerRow = headers.map(header => `"${header}"`).join(',');
+  const dataRows = csvData.map(row =>
+    headers.map(header => `"${row[header]}"`).join(',')
+  );
+  const metadata = [
+    `"=== DATA MONITORING STATION 1 ==="`,
+    `"Diekspor pada: ${formatUserFriendlyDate(new Date().toISOString())}"`,
+    `"Total Records: ${data.length}"`,
+    '""',
+    headerRow
+  ];
+  return [...metadata, ...dataRows].join('\n');
+};
+
+// Helper: Filter data by date
+const filterDataByDate = (data, startDate, endDate) => {
+  if (!startDate || !endDate) return [];
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T23:59:59`);
+  return data.filter(item => {
+    if (!item.timestamp) return false;
+    const itemDate = new Date(item.timestamp);
+    return itemDate >= start && itemDate <= end;
+  });
+};
+
+// Resample function (mean fill)
+function resampleTimeSeriesWithMeanFill(data, intervalMinutes, fields) {
+  if (!Array.isArray(data) || data.length === 0) return [];
+  // Sort data by timestamp ascending
+  data = [...data].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  const start = new Date(data[0].timestamp);
+  const end = new Date(data[data.length - 1].timestamp);
+  let result = [];
+  let current = new Date(start);
+  while (current <= end) {
+    let next = new Date(current);
+    next.setMinutes(next.getMinutes() + intervalMinutes);
+    let slotData = data.filter(item => {
+      let t = new Date(item.timestamp);
+      return t >= current && t < next;
+    });
+    let resampled = { timestamp: current.toISOString(), userFriendlyDate: formatUserFriendlyDate(current.toISOString()) };
+    fields.forEach(field => {
+      if (slotData.length === 0) {
+        const mean = data.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0) / data.length;
+        resampled[field] = isNaN(mean) ? null : mean;
+      } else {
+        const mean = slotData.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0) / slotData.length;
+        resampled[field] = isNaN(mean) ? null : mean;
+      }
+    });
+    // Wind direction: ambil yang paling sering muncul di slot
+    if (fields.includes('windDirection')) {
+      if (slotData.length === 0) {
+        resampled['windDirection'] = '';
+      } else {
+        const freq = {};
+        slotData.forEach(item => {
+          const dir = item.windDirection || '';
+          freq[dir] = (freq[dir] || 0) + 1;
+        });
+        const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+        resampled['windDirection'] = sorted.length > 0 ? sorted[0][0] : '';
+      }
+    }
+    result.push(resampled);
+    current = next;
+  }
+  return result;
+}
+
 const Download = () => {
-  const [selectedStation, setSelectedStation] = useState('Station 1');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [fileFormat, setFileFormat] = useState('json');
@@ -186,67 +201,31 @@ const Download = () => {
   const [station1Data, setStation1Data] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dataReady, setDataReady] = useState(false);
-  
-  // Opsi resampling
+
+  // Resampling state
   const [enableResampling, setEnableResampling] = useState(false);
   const [resampleInterval, setResampleInterval] = useState(15);
-  const [resampleMethod, setResampleMethod] = useState('mean');
-  
-  // Opsi interpolasi data
-  const [enableInterpolation, setEnableInterpolation] = useState(true);
-  const [interpolationInterval, setInterpolationInterval] = useState(5);
-  const [enableSmoothing, setEnableSmoothing] = useState(false);
 
-  // Fetch data dari API saat komponen mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setDataReady(false);
-        console.log("Starting data fetch...");
-        
-        // Fetch Station 1 data
-        const res1 = await fetch(API_KALIMANTAN_TOPIC1);
-        
-        console.log("Response status:", { 
-          station1: res1.status, 
-          station1_ok: res1.ok
-        });
-        
-        if (!res1.ok) {
-          const text1 = await res1.text();
-          console.error("Station 1 API error:", text1.substring(0, 200));
-        }
-        
-        const json1 = res1.ok ? await res1.json() : { result: [] };
-        
-        console.log("Station 1 API response:", json1);
-        
-        const station1Data = Array.isArray(json1.result) ? json1.result.map(mapStation1) : [];
-        
-        console.log("Mapped Station 1 data:", station1Data.length, station1Data.slice(0, 3));
-        
-        setStation1Data(station1Data);
+        const res = await fetch(API_KALIMANTAN_TOPIC1);
+        if (!res.ok) throw new Error('Failed to fetch data');
+        const json = await res.json();
+        const mapped = Array.isArray(json.result) ? json.result.map(mapStation1) : [];
+        setStation1Data(mapped);
         setDataReady(true);
-        
-        console.log("All data fetched and ready!");
       } catch (error) {
-        console.error("Error fetching data:", error);
         setStation1Data([]);
         setDataReady(false);
       } finally {
         setLoading(false);
       }
     };
-    
     fetchData();
   }, []);
-
-  // Debug effect untuk memonitor perubahan data
-  useEffect(() => {
-    console.log("Station 1 Data updated:", station1Data.length);
-    console.log("Data ready:", dataReady);
-  }, [station1Data, dataReady]);
 
   const handleDownload = () => {
     setShowLogin(true);
@@ -257,156 +236,49 @@ const Download = () => {
       alert('Data is still loading. Please wait...');
       return;
     }
-    
     if (!startDate || !endDate) {
       alert('Please select both start date and end date.');
       return;
     }
-    
-    console.log('=== DOWNLOAD PROCESS START ===');
-    console.log('Selected station:', selectedStation);
-    console.log('Date range:', { startDate, endDate });
-    console.log('Data ready status:', dataReady);
-    
-    const rawData = getStationData();
-    console.log('Raw station data count:', rawData.length);
-    console.log('Sample raw data:', rawData.slice(0, 3));
-    
-    let data = filterDataByDate(rawData);
-    console.log('Data after date filtering:', data.length);
-    
-    // Cek jika ada data invalid
-    const hasInvalid = data.some(
-      (item) =>
-        item.invalid ||
-        item.timestamp === 'Invalid date' ||
-        item.timestamp === 'alat rusak'
-    );
-    
-    console.log('Has invalid data:', hasInvalid);
-    
-    if (hasInvalid) {
-      alert('Data tidak bisa di-download karena respon dari server tertulis alat rusak atau Invalid date.');
-      return;
-    }
+    const rawData = station1Data;
+    let data = filterDataByDate(rawData, startDate, endDate);
     if (data.length === 0) {
-      console.log('=== NO DATA AVAILABLE ===');
-      console.log('Raw data sample timestamps:', rawData.slice(0, 5).map(item => item.timestamp));
       alert('No data available for the selected date range.');
       return;
     }
 
-    // Apply interpolasi data jika diaktifkan
-    if (enableInterpolation && data.length > 1) {
-      console.log('Applying data interpolation...');
-      try {
-        const startTime = new Date(`${startDate}T00:00:00`);
-        const endTime = new Date(`${endDate}T23:59:59`);
-        
-        // Fill gaps dalam data
-        data = fillDataGaps(data, 120, interpolationInterval); // Max gap 2 jam, interval sesuai setting
-        console.log('Data after gap filling:', data.length);
-        
-        // Generate data dengan interval konsisten
-        data = generateConsistentIntervalData(data, interpolationInterval, startTime, endTime);
-        console.log('Data after consistent interval generation:', data.length);
-        
-        // Apply smoothing jika diaktifkan
-        if (enableSmoothing) {
-          data = smoothData(data, 3);
-          console.log('Data after smoothing:', data.length);
-        }
-      } catch (error) {
-        console.error('Interpolation error:', error);
-        alert('Error during data interpolation: ' + error.message);
-        return;
-      }
-    }
-
-    // Apply resampling jika diaktifkan (setelah interpolasi)
+    // Resampling
     if (enableResampling) {
-      console.log('Applying resampling:', { resampleInterval, resampleMethod });
       try {
-        // Station 1 fields untuk resampling
-        let fields = ['humidity', 'temperature', 'rainfall', 'windspeed', 'irradiation', 'windDirection', 'angle'];
-        
-        data = resampleTimeSeries(data, resampleInterval, resampleMethod, fields);
-        console.log('Data after resampling:', data.length);
-        
+        let fields = [
+          'humidity', 'temperature', 'rainfall', 'windspeed', 'irradiation',
+          'windDirection', 'angle'
+        ];
+        let validData = data.filter(item => item.timestamp);
+        data = resampleTimeSeriesWithMeanFill(validData, resampleInterval, fields);
         if (data.length === 0) {
           alert('No data available after resampling.');
           return;
         }
       } catch (error) {
-        console.error('Resampling error:', error);
         alert('Error during resampling: ' + error.message);
         return;
       }
     }
 
-    // Generate filename dengan info lengkap
-    const interpolationSuffix = enableInterpolation ? `_interpolated_${interpolationInterval}min` : '';
-    const smoothingSuffix = enableSmoothing ? '_smoothed' : '';
-    const resampleSuffix = enableResampling ? `_resampled_${resampleInterval}min_${resampleMethod}` : '';
-    const baseFilename = `Station_1_data${interpolationSuffix}${smoothingSuffix}${resampleSuffix}`;
-    
-    console.log('Downloading file:', baseFilename);
-    
-    if (fileFormat === 'json') {
-      // Untuk JSON, buat format yang lebih readable
-      const actualDataCount = data.filter(item => !item.interpolated).length;
-      const interpolatedCount = data.filter(item => item.interpolated).length;
-      
-      const jsonData = {
-        metadata: {
-          station: selectedStation,
-          dateRange: `${startDate} to ${endDate}`,
-          exportTime: formatUserFriendlyDate(new Date().toISOString()),
-          totalRecords: data.length,
-          actualRecords: actualDataCount,
-          interpolatedRecords: interpolatedCount,
-          processing: {
-            interpolation: enableInterpolation ? {
-              enabled: true,
-              interval: `${interpolationInterval} minutes`,
-              smoothing: enableSmoothing
-            } : { enabled: false },
-            resampling: enableResampling ? {
-              enabled: true,
-              interval: `${resampleInterval} minutes`,
-              method: resampleMethod
-            } : { enabled: false }
-          }
-        },
-        data: data.map((item, index) => ({
-          no: index + 1,
-          tanggalWaktu: item.userFriendlyDate,
-          timestamp: item.timestamp,
-          status: item.interpolated ? 'Estimasi' : 'Aktual',
-          kelembapan: `${parseFloat(item.humidity || 0).toFixed(1)}%`,
-          suhu: `${parseFloat(item.temperature || 0).toFixed(1)}°C`,
-          curahHujan: `${parseFloat(item.rainfall || 0).toFixed(1)}mm`,
-          kecepatanAngin: `${parseFloat(item.windspeed || 0).toFixed(1)}m/s`,
-          radiasiMatahari: `${parseFloat(item.irradiation || 0).toFixed(0)}W/m²`,
-          arahAngin: item.windDirection || '',
-          sudutAngin: `${parseFloat(item.angle || 0).toFixed(0)}°`
-        }))
-      };
-      
-      const blob = new Blob([JSON.stringify(jsonData, null, 2)], { 
-        type: 'application/json;charset=utf-8;' 
-      });
-      saveAs(blob, `${baseFilename}.json`);
-    } else if (fileFormat === 'csv') {
-      // Untuk CSV, gunakan format yang lebih rapi
-      const csvContent = createFormattedCSV(data, 'Station 1');
-      const blob = new Blob([csvContent], { 
-        type: 'text/csv;charset=utf-8;' 
-      });
-      saveAs(blob, `${baseFilename}.csv`);
+    let filename = `Station_1_${startDate}_to_${endDate}`;
+    if (enableResampling) {
+      filename += `_resample${resampleInterval}m`;
     }
-    
-    console.log('=== DOWNLOAD PROCESS END ===');
+
+    if (fileFormat === 'json') {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      saveAs(blob, `${filename}.json`);
+    } else if (fileFormat === 'csv') {
+      const csv = createFormattedCSV(data);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      saveAs(blob, `${filename}.csv`);
+    }
   };
 
   const handleLoginSubmit = () => {
@@ -418,68 +290,6 @@ const Download = () => {
     }
   };
 
-  const getStationData = () => {
-    return station1Data;
-  };
-
-  const filterDataByDate = (data) => {
-    // Pastikan tanggal diubah ke format yang bisa dibandingkan
-    if (!startDate || !endDate) {
-      console.log('No start or end date selected');
-      return [];
-    }
-    
-    const start = new Date(`${startDate}T00:00:00`);
-    const end = new Date(`${endDate}T23:59:59`);
-    
-    console.log('Filter criteria:', {
-      startDate,
-      endDate,
-      start: start.toISOString(),
-      end: end.toISOString()
-    });
-    
-    console.log('Total data to filter:', data.length);
-    console.log('Sample data timestamps:', data.slice(0, 3).map(item => ({
-      original: item.timestamp,
-      parsed: new Date(item.timestamp).toISOString(),
-      valid: !isNaN(new Date(item.timestamp).getTime())
-    })));
-    
-    const filtered = data.filter((item) => {
-      if (!item.timestamp) {
-        console.log('Item has no timestamp:', item);
-        return false;
-      }
-      
-      const itemDate = new Date(item.timestamp);
-      
-      if (isNaN(itemDate.getTime())) {
-        console.log('Invalid timestamp:', item.timestamp);
-        return false;
-      }
-      
-      const isInRange = itemDate >= start && itemDate <= end;
-      
-      if (!isInRange) {
-        console.log('Item out of range:', {
-          timestamp: item.timestamp,
-          itemDate: itemDate.toISOString(),
-          start: start.toISOString(),
-          end: end.toISOString(),
-          isAfterStart: itemDate >= start,
-          isBeforeEnd: itemDate <= end
-        });
-      }
-      
-      return isInRange;
-    });
-    
-    console.log('Filtered data count:', filtered.length);
-    
-    return filtered;
-  };
-
   return (
     <Container style={{ marginTop: '20px' }}>
       <Row>
@@ -487,19 +297,13 @@ const Download = () => {
           <h3 className="text-center fw-bold text-primary">Download Data</h3>
         </Col>
       </Row>
-
       <Row className="mt-4 d-flex justify-content-center">
         <Col md={6} className="text-center">
-          <Button
-            variant="primary"
-            className="px-4 py-2 fw-bold shadow-sm"
-            disabled
-          >
+          <Button variant="primary" className="px-4 py-2 fw-bold shadow-sm" disabled>
             Station 1
           </Button>
         </Col>
       </Row>
-
       <Row className="mt-4">
         <Col md={6}>
           <Form.Group controlId="startDate">
@@ -524,7 +328,6 @@ const Download = () => {
           </Form.Group>
         </Col>
       </Row>
-
       <Row className="mt-4">
         <Col>
           <Form.Group controlId="fileFormat">
@@ -550,63 +353,7 @@ const Download = () => {
           </Form.Group>
         </Col>
       </Row>
-
-      {/* Data Enhancement Options */}
-      <Row className="mt-4">
-        <Col>
-          <Form.Group>
-            <Form.Check
-              type="checkbox"
-              label="Enable Data Interpolation (Mengisi Gap Data)"
-              checked={enableInterpolation}
-              onChange={(e) => setEnableInterpolation(e.target.checked)}
-              className="fw-bold"
-            />
-            <Form.Text className="text-muted">
-              Mengisi celah data yang hilang dengan estimasi interpolasi untuk data yang lebih lengkap
-            </Form.Text>
-          </Form.Group>
-        </Col>
-      </Row>
-
-      {enableInterpolation && (
-        <>
-          <Row className="mt-3">
-            <Col md={6}>
-              <Form.Group controlId="interpolationInterval">
-                <Form.Label className="fw-bold">Interval Interpolasi (minutes)</Form.Label>
-                <Form.Select
-                  value={interpolationInterval}
-                  onChange={(e) => setInterpolationInterval(parseInt(e.target.value))}
-                  className="shadow-sm"
-                >
-                  <option value={1}>1 minute</option>
-                  <option value={5}>5 minutes</option>
-                  <option value={10}>10 minutes</option>
-                  <option value={15}>15 minutes</option>
-                  <option value={30}>30 minutes</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group>
-                <Form.Check
-                  type="checkbox"
-                  label="Enable Data Smoothing"
-                  checked={enableSmoothing}
-                  onChange={(e) => setEnableSmoothing(e.target.checked)}
-                  className="fw-bold"
-                />
-                <Form.Text className="text-muted">
-                  Menghaluskan data untuk mengurangi noise
-                </Form.Text>
-              </Form.Group>
-            </Col>
-          </Row>
-        </>
-      )}
-
-      {/* Resampling Options */}
+      {/* Resampling UI */}
       <Row className="mt-4">
         <Col>
           <Form.Group>
@@ -623,53 +370,46 @@ const Download = () => {
           </Form.Group>
         </Col>
       </Row>
-
- 
-
       {enableResampling && (
-        <>
-          <Row className="mt-3">
-            <Col md={6}>
-              <Form.Group controlId="resampleInterval">
-                <Form.Label className="fw-bold">Interval (minutes)</Form.Label>
-                <Form.Select
-                  value={resampleInterval}
-                  onChange={(e) => setResampleInterval(parseInt(e.target.value))}
-                  className="shadow-sm"
-                >
-                  <option value={5}>5 minutes</option>
-                  <option value={15}>15 minutes</option>
-                  <option value={30}>30 minutes</option>
-                  <option value={60}>1 hour</option>
-                  <option value={360}>6 hours</option>
-                  <option value={720}>12 hours</option>
-                  <option value={1440}>1 day</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group controlId="resampleMethod">
-                <Form.Label className="fw-bold">Aggregation Method</Form.Label>
-                <Form.Select
-                  value={resampleMethod}
-                  onChange={(e) => setResampleMethod(e.target.value)}
-                  className="shadow-sm"
-                >
-                  <option value="mean">Average (Mean)</option>
-                  <option value="first">First Value</option>
-                  <option value="last">Last Value</option>
-                  <option value="max">Maximum</option>
-                  <option value="min">Minimum</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-          </Row>
-        </>
+        <Row className="mt-3">
+          <Col md={6}>
+            <Form.Group>
+              <Form.Label className="fw-bold">Select timeframe</Form.Label>
+              <div>
+                <Form.Check
+                  type="radio"
+                  label="1menit"
+                  name="timeframe"
+                  value={1}
+                  checked={resampleInterval === 1}
+                  onChange={() => setResampleInterval(1)}
+                  className="mb-2"
+                />
+                <Form.Check
+                  type="radio"
+                  label="15menit"
+                  name="timeframe"
+                  value={15}
+                  checked={resampleInterval === 15}
+                  onChange={() => setResampleInterval(15)}
+                  className="mb-2"
+                />
+                <Form.Check
+                  type="radio"
+                  label="30menit"
+                  name="timeframe"
+                  value={30}
+                  checked={resampleInterval === 30}
+                  onChange={() => setResampleInterval(30)}
+                  className="mb-2"
+                />
+              </div>
+            </Form.Group>
+          </Col>
+        </Row>
       )}
-
       <Row className="mt-4">
         <Col className="text-center">
-          {/* Status indicator */}
           {loading && (
             <div className="mb-3">
               <div className="spinner-border text-primary me-2" role="status">
@@ -690,16 +430,12 @@ const Download = () => {
               <small className="text-muted">
                 Station 1: {station1Data.length} records
                 <br />
-                {enableInterpolation && (
-                  <><strong>Interpolasi:</strong> Interval {interpolationInterval} menit{enableSmoothing && ' + Smoothing'}<br /></>
-                )}
                 {enableResampling && (
-                  <><strong>Resampling:</strong> {resampleInterval} menit ({resampleMethod})<br /></>
+                  <><strong>Resampling:</strong> {resampleInterval} menit<br /></>
                 )}
               </small>
             </div>
           )}
-          
           <Button
             variant="success"
             onClick={handleDownload}
@@ -710,8 +446,6 @@ const Download = () => {
           </Button>
         </Col>
       </Row>
-
-      {/* Modal Login */}
       <Modal show={showLogin} onHide={() => setShowLogin(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Login Required</Modal.Title>
@@ -727,7 +461,6 @@ const Download = () => {
                 onChange={(e) => setUsername(e.target.value)}
               />
             </Form.Group>
-
             <Form.Group controlId="formPassword" className="mb-3">
               <Form.Label>Password</Form.Label>
               <Form.Control
@@ -737,7 +470,6 @@ const Download = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </Form.Group>
-
             <Button variant="primary" onClick={handleLoginSubmit}>
               Login
             </Button>
