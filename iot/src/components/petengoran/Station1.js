@@ -89,7 +89,7 @@ const mapApiData = (item) => {
       windDirection: 'error',
       angle: 'error',
       bmptemperature: 'error',
-      airpressure: null, // fix: biarkan null
+      airpressure: null,
       suhuair: 'error',
     };
   }
@@ -105,7 +105,7 @@ const mapApiData = (item) => {
       windDirection: 'alat rusak',
       angle: 'alat rusak',
       bmptemperature: 'alat rusak',
-      airpressure: null, // fix: biarkan null
+      airpressure: null,
       suhuair: 'alat rusak',
     };
   }
@@ -119,14 +119,13 @@ const mapApiData = (item) => {
     windDirection: windDirectionToEnglish(item.direction ?? ''),
     angle: isValidValue(item.angle) ? Number(item.angle) : 'alat rusak',
     bmptemperature: isValidValue(item.bmptemperature) ? Number(item.bmptemperature) : 'alat rusak',
-    airpressure: item.airpressure === null ? null : (isValidValue(item.airpressure) ? Number(item.airpressure) : 'alat rusak'), // fix
+    airpressure: item.airpressure === null ? null : (isValidValue(item.airpressure) ? Number(item.airpressure) : 'alat rusak'),
     suhuair: isValidValue(item.suhuair) ? Number(item.suhuair) : 'alat rusak',
   };
 };
 
 function filterByRange(data, filter) {
   if (!Array.isArray(data) || data.length === 0) return [];
-  // Cari timestamp terbaru dari data
   const timestamps = data
     .map(d => new Date(d.timestamp))
     .filter(d => !isNaN(d.getTime()));
@@ -167,10 +166,8 @@ const Station1 = () => {
   });
   const [dataStatus, setDataStatus] = useState('');
 
-  // Only use 15m resample for all filter
   const API_URL = process.env.REACT_APP_API_PETENGORAN_RESAMPLE15M_STATION1;
 
-  // Fetch data dari API 15m untuk semua filter
   const fetchData = async () => {
     setLoading(true);
     setError(null);
@@ -204,14 +201,11 @@ const Station1 = () => {
   }, []);
 
   useEffect(() => {
-    // Filter data sesuai range
     const filtered = filterByRange(allData, filter);
     setFilteredData(filtered);
 
-    // Table: urutkan terbaru ke terlama
     setTableData([...filtered].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
 
-    // Gauge: ambil data terbaru yang timestamp valid
     const latest = filtered.find(
       item => item.timestamp && item.timestamp !== 'error' && item.timestamp !== 'alat rusak' && !isNaN(new Date(item.timestamp).getTime())
     );
@@ -246,7 +240,6 @@ const Station1 = () => {
     }
   }, [allData, filter]);
 
-  // Prepare chart data (sort chronologically for better chart visualization)
   const chartData = [...filteredData].sort((a, b) => {
     if (a.timestamp === 'error' || a.timestamp === 'alat rusak' || b.timestamp === 'error' || b.timestamp === 'alat rusak') {
       return 0;
@@ -364,7 +357,7 @@ const Station1 = () => {
         </Row>
         <Row className="mt-5 mb-3">
           <Col className="text-center">
-            <ButtonGroup>
+            {/* <ButtonGroup>
               <Button
                 variant={filter === '1d' ? 'primary' : 'outline-primary'}
                 onClick={() => setFilter('1d')}
@@ -383,7 +376,7 @@ const Station1 = () => {
               >
                 1 Bulan Terakhir
               </Button>
-            </ButtonGroup>
+            </ButtonGroup> */}
           </Col>
         </Row>
         <Row>
@@ -395,7 +388,7 @@ const Station1 = () => {
           <Col>
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
                 <TrendChart
-                  data={chartData}
+                  data={allData}
                   fields={[
                     { key: 'humidity', label: 'Humidity (%)' },
                     { key: 'temperature', label: 'Temperature (°C)' },
@@ -449,7 +442,7 @@ const Station1 = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {tableData.map((item, index) => {
+                    {tableData.slice(0, 10).map((item, index) => {
                       const isLatest = index === 0;
                       const isUsedInGauge = (
                         item.humidity === gaugeData.humidity &&
