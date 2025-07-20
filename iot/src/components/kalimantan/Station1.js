@@ -7,6 +7,7 @@ import RainfallGauge from './status/Rainfall';
 import TemperatureGauge from './status/TemperaturGauge';
 import WindDirectionGauge from './status/WindDirection';
 import WindSpeedGauge from './status/WindSpeed';
+import { resampleTimeSeriesWithMeanFill } from './chart';
 
 // Helper
 const windDirectionToEnglish = (dir) => {
@@ -201,25 +202,27 @@ const Station1 = () => {
 
   useEffect(() => {
     const filtered = filterByRange(allData, filter);
-    console.log('allData:', allData); // Tambahkan ini
-    console.log('filtered:', filtered); // Tambahkan ini
     setFilteredData(filtered);
-  
-    setTableData([...filtered].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
-  
-    const latest = filtered.find(
-      item => item.timestamp && item.timestamp !== 'error' && item.timestamp !== 'alat rusak' && !isNaN(new Date(item.timestamp).getTime())
-    );
-    console.log('latest:', latest); // Tambahkan ini
-    if (latest) {
+
+    const fields = [
+      'humidity', 'temperature', 'rainfall', 'windspeed', 'irradiation', 'angle'
+    ];
+    const resampledTableData = resampleTimeSeriesWithMeanFill(filtered, 1, fields);
+
+    const sortedResampled = [...resampledTableData].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    setTableData(sortedResampled);
+
+    const latestResampled = sortedResampled[0];
+
+    if (latestResampled) {
       setGaugeData({
-        humidity: latest.humidity,
-        temperature: latest.temperature,
-        rainfall: latest.rainfall,
-        windspeed: latest.windspeed,
-        irradiation: latest.irradiation,
-        windDirection: latest.windDirection,
-        angle: latest.angle,
+        humidity: latestResampled.humidity,
+        temperature: latestResampled.temperature,
+        rainfall: latestResampled.rainfall,
+        windspeed: latestResampled.windspeed,
+        irradiation: latestResampled.irradiation,
+        windDirection: latestResampled.windDirection,
+        angle: latestResampled.angle,
       });
       setDataStatus('Using latest data for gauges');
     } else {

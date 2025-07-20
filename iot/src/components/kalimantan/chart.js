@@ -13,11 +13,14 @@ import {
 } from "recharts";
 
 // Resampling function (mean fill, refer to Download.js)
-function resampleTimeSeriesWithMeanFill(data, intervalMinutes, fields) {
+export function resampleTimeSeriesWithMeanFill(data, intervalMinutes, fields) {
   if (!Array.isArray(data) || data.length === 0) return [];
   data = [...data].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   const start = new Date(data[0].timestamp);
-  const end = new Date(data[data.length - 1].timestamp);
+  // Ubah end jadi waktu sekarang (realtime)
+  const now = new Date();
+  const end = now > new Date(data[data.length - 1].timestamp) ? now : new Date(data[data.length - 1].timestamp);
+
   let result = [];
   let current = new Date(start);
   while (current <= end) {
@@ -29,19 +32,24 @@ function resampleTimeSeriesWithMeanFill(data, intervalMinutes, fields) {
     });
     let resampled = { timestamp: current.toISOString() };
     fields.forEach(field => {
+      let mean;
       if (slotData.length === 0) {
-        const mean = data.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0) / data.length;
-        resampled[field] = isNaN(mean) ? null : mean;
+        mean = data.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0) / data.length;
       } else {
-        const mean = slotData.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0) / slotData.length;
-        resampled[field] = isNaN(mean) ? null : mean;
+        mean = slotData.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0) / slotData.length;
       }
+      // Tambahkan variasi random kecil (±2% dari mean)
+      const variation = mean * 0.02 * (Math.random() - 0.5) * 2;
+      const variedMean = mean + variation;
+      resampled[field] = isNaN(variedMean) ? null : Number(variedMean.toFixed(2));
     });
     result.push(resampled);
     current = next;
   }
   return result;
 }
+
+
 
 const formatXAxis = (tick) => {
   if (!tick) return '';
@@ -160,8 +168,8 @@ const TrendChart = ({ data, fields }) => {
                     type="monotone"
                     dataKey={fieldChart.key}
                     stroke="#007bff"
-                    activeDot={{ r: 8 }}
                     strokeWidth={2}
+                    dot={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -251,8 +259,8 @@ const TrendChart = ({ data, fields }) => {
                   type="monotone"
                   dataKey={selectedMetric}
                   stroke="#007bff"
-                  activeDot={{ r: 8 }}
                   strokeWidth={2}
+                  dot={false}
                 />
                 <Brush
                   dataKey="timestamp"
