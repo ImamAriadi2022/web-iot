@@ -120,22 +120,17 @@ const mapApiData = (item) => {
 
 function filterByRange(data, filter) {
   if (!Array.isArray(data) || data.length === 0) return [];
-  // Cari timestamp terbaru dari data (bukan waktu sekarang)
-  const timestamps = data
-    .map(d => new Date(d.timestamp))
-    .filter(d => !isNaN(d.getTime()));
-  if (timestamps.length === 0) return [];
-  const maxDate = new Date(Math.max(...timestamps));
+  const now = new Date(); // gunakan waktu sekarang
   let minDate;
-  if (filter === '1d') minDate = new Date(maxDate.getTime() - 24 * 60 * 60 * 1000);
-  else if (filter === '7d') minDate = new Date(maxDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-  else if (filter === '1m') minDate = new Date(maxDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+  if (filter === '1d') minDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  else if (filter === '7d') minDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  else if (filter === '1m') minDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   else minDate = null;
 
   return minDate
     ? data.filter(d => {
         const t = new Date(d.timestamp);
-        return t >= minDate && t <= maxDate;
+        return t >= minDate && t <= now;
       })
     : data;
 }
@@ -348,26 +343,6 @@ const Station2 = () => {
         </Row>
         <Row className="mt-5 mb-3">
           <Col className="text-center">
-            <ButtonGroup>
-              <Button
-                variant={filter === '1d' ? 'primary' : 'outline-primary'}
-                onClick={() => setFilter('1d')}
-              >
-                1 Hari Terakhir
-              </Button>
-              <Button
-                variant={filter === '7d' ? 'primary' : 'outline-primary'}
-                onClick={() => setFilter('7d')}
-              >
-                7 Hari Terakhir
-              </Button>
-              <Button
-                variant={filter === '1m' ? 'primary' : 'outline-primary'}
-                onClick={() => setFilter('1m')}
-              >
-                1 Bulan Terakhir
-              </Button>
-            </ButtonGroup>
           </Col>
         </Row>
         <Row>
@@ -379,7 +354,7 @@ const Station2 = () => {
           <Col>
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
                 <TrendChart
-                  data={chartData}
+                  data={allData}
                   fields={[
                     { key: 'humidity', label: 'Humidity (%)' },
                     { key: 'temperature', label: 'Temperature (°C)' },
@@ -394,23 +369,7 @@ const Station2 = () => {
             </div>
           </Col>
         </Row>
-        <Row className="mt-5">
-          <Col>
-            <h2 className="text-center" style={{ color: '#007bff' }}>Table Status</h2>
-            {tableData.length > 0 && (
-              <div className="text-center mb-3">
-                <small className="text-muted">
-                  <span className="badge bg-primary me-2">Latest</span>
-                  Most recent data entry
-                  <span className="ms-3">
-                    <span className="badge bg-success me-2">Used in Gauge</span>
-                    Data currently displayed in gauges above
-                  </span>
-                </small>
-              </div>
-            )}
-          </Col>
-        </Row>
+
         <Row>
           <Col>
             <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)', overflowX: 'auto' }}>
@@ -431,7 +390,7 @@ const Station2 = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {tableData.map((item, index) => {
+                    {tableData.slice(0, 10).map((item, index) => {
                       const isLatest = index === 0;
                       const isUsedInGauge = (
                         item.humidity === gaugeData.humidity &&
@@ -473,6 +432,7 @@ const Station2 = () => {
             </div>
           </Col>
         </Row>
+
       </Container>
     </section>
   );
