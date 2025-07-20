@@ -411,7 +411,8 @@ const filterDataByDate = (data) => {
   if (!startDate || !endDate) return [];
   return data.filter((item) => {
     if (!item.timestamp) return false;
-    const itemYMD = item.timestamp.slice(0, 10); // YYYY-MM-DD
+    // Ambil tanggal UTC dari timestamp ISO
+    const itemYMD = new Date(item.timestamp).toISOString().slice(0, 10);
     return itemYMD >= startDate && itemYMD <= endDate;
   });
 };
@@ -447,7 +448,17 @@ const filterDataByDate = (data) => {
             <Form.Control
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => {
+                  // Konversi ke format YYYY-MM-DD jika perlu
+                  const val = e.target.value;
+                  // Jika format DD/MM/YYYY, ubah ke YYYY-MM-DD
+                  let iso = val;
+                  if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
+                    const [d, m, y] = val.split('/');
+                    iso = `${y}-${m}-${d}`;
+                  }
+                  setStartDate(iso);
+                }}
               className="shadow-sm"
             />
           </Form.Group>
@@ -458,7 +469,15 @@ const filterDataByDate = (data) => {
             <Form.Control
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                let iso = val;
+                if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
+                  const [d, m, y] = val.split('/');
+                  iso = `${y}-${m}-${d}`;
+                }
+                setEndDate(iso);
+              }}
               className="shadow-sm"
             />
           </Form.Group>
