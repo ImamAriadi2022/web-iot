@@ -22,9 +22,6 @@ const Launch = () => {
                 <Button variant="success" className="me-2 mb-2" href="/kalimantan">
                   Kalimantan <FaArrowRight />
                 </Button>
-                <Button variant="warning" className="mb-2" href="/sebesi">
-                  Sebesi <FaArrowRight />
-                </Button>
               </div>
             </Slide>
           </Col>
