@@ -332,14 +332,14 @@ const Download = () => {
   // Fungsi resampling dengan mean fill untuk gap data
   function resampleTimeSeriesWithMeanFill(data, intervalMinutes, fields) {
     if (!Array.isArray(data) || data.length === 0) return [];
-    // Sort data by timestamp ascending
     data = [...data].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
     const start = new Date(data[0].timestamp);
     const end = new Date(data[data.length - 1].timestamp);
+
+  
     let result = [];
     let current = new Date(start);
     while (current <= end) {
-      // Ambil data dalam slot waktu ini
       let next = new Date(current);
       next.setMinutes(next.getMinutes() + intervalMinutes);
       let slotData = data.filter(item => {
@@ -349,11 +349,9 @@ const Download = () => {
       let resampled = { timestamp: current.toISOString(), userFriendlyDate: formatUserFriendlyDate(current.toISOString()) };
       fields.forEach(field => {
         if (slotData.length === 0) {
-          // Jika slot kosong, isi dengan mean dari seluruh data
           const mean = data.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0) / data.length;
           resampled[field] = isNaN(mean) ? null : mean;
         } else {
-          // Jika ada data, ambil mean slot
           const mean = slotData.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0) / slotData.length;
           resampled[field] = isNaN(mean) ? null : mean;
         }
@@ -363,8 +361,6 @@ const Download = () => {
     }
     return result;
   }
-
-// ...existing code...
 
   const handleLoginSubmit = () => {
     if (username === 'admin' && password === 'admin123') {
