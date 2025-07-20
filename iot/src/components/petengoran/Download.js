@@ -170,6 +170,8 @@ const createFormattedCSV = (data, stationType) => {
   return [...metadata, ...dataRows].join('\n');
 };
 
+
+
 const Download = () => {
   const [selectedStation, setSelectedStation] = useState('Station 1');
   const [startDate, setStartDate] = useState('');
@@ -183,15 +185,10 @@ const Download = () => {
   const [loading, setLoading] = useState(false);
   const [dataReady, setDataReady] = useState(false);
 
-  // Opsi resampling
+  // Hanya fitur resampling
   const [enableResampling, setEnableResampling] = useState(false);
   const [resampleInterval, setResampleInterval] = useState(15);
   const [resampleMethod, setResampleMethod] = useState('mean');
-
-  // Opsi interpolasi data
-  const [enableInterpolation, setEnableInterpolation] = useState(true);
-  const [interpolationInterval, setInterpolationInterval] = useState(5);
-  const [enableSmoothing, setEnableSmoothing] = useState(false);
 
   // Fetch data dari API saat komponen mount
   useEffect(() => {
@@ -229,37 +226,36 @@ const Download = () => {
   };
 
   // Fungsi untuk cek tanggal yang tidak ada data
-const getMissingDates = (data, startDate, endDate) => {
-  if (!startDate || !endDate) return [];
-  const dateSet = new Set(
-    data.map(item => {
-      if (!item.timestamp) return null;
-      return item.timestamp.slice(0, 10);
-    }).filter(Boolean)
-  );
-  const missing = [];
-  let current = startDate;
-  while (current <= endDate) {
-    if (!dateSet.has(current)) {
-      missing.push(current);
-    }
-    // Tambah 1 hari secara manual (tanpa Date object)
-    const [y, m, d] = current.split('-').map(Number);
-    let year = y, month = m, day = d + 1;
-    // Penyesuaian akhir bulan/tahun
-    const daysInMonth = new Date(year, month, 0).getDate();
-    if (day > daysInMonth) {
-      day = 1;
-      month += 1;
-      if (month > 12) {
-        month = 1;
-        year += 1;
+  const getMissingDates = (data, startDate, endDate) => {
+    if (!startDate || !endDate) return [];
+    const dateSet = new Set(
+      data.map(item => {
+        if (!item.timestamp) return null;
+        return new Date(item.timestamp).toISOString().slice(0, 10);
+      }).filter(Boolean)
+    );
+    const missing = [];
+    let current = startDate;
+    while (current <= endDate) {
+      if (!dateSet.has(current)) {
+        missing.push(current);
       }
+      // Tambah 1 hari secara manual
+      const [y, m, d] = current.split('-').map(Number);
+      let year = y, month = m, day = d + 1;
+      const daysInMonth = new Date(year, month, 0).getDate();
+      if (day > daysInMonth) {
+        day = 1;
+        month += 1;
+        if (month > 12) {
+          month = 1;
+          year += 1;
+        }
+      }
+      current = `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
     }
-    current = `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-  }
-  return missing;
-};
+    return missing;
+  };
 
   const processDownload = () => {
     if (!dataReady) {
@@ -297,30 +293,17 @@ const getMissingDates = (data, startDate, endDate) => {
       return;
     }
 
-    // Apply interpolasi data jika diaktifkan
-    if (enableInterpolation && data.length > 1) {
-      try {
-        const startTime = new Date(`${startDate}T00:00:00`);
-        const endTime = new Date(`${endDate}T23:59:59`);
-        data = fillDataGaps(data, 120, interpolationInterval);
-        data = generateConsistentIntervalData(data, interpolationInterval, startTime, endTime);
-        if (enableSmoothing) {
-          data = smoothData(data, 3);
-        }
-      } catch (error) {
-        alert('Error during data interpolation: ' + error.message);
-        return;
-      }
-    }
-
-    // Apply resampling jika diaktifkan (setelah interpolasi)
+    // Resampling dengan mean untuk mengisi gap data kosong
     if (enableResampling) {
       try {
         let fields = [
           'humidity', 'temperature', 'rainfall', 'windspeed', 'irradiation',
           'windDirection', 'angle', 'bmptemperature', 'airpressure', 'suhuair'
         ];
-        data = resampleTimeSeries(data, resampleInterval, resampleMethod, fields);
+        // Ambil data valid
+        let validData = data.filter(item => item.timestamp && item.timestamp !== 'Invalid date' && item.timestamp !== 'alat rusak');
+        // Resampling: jika ada slot waktu kosong, isi dengan mean dari data yang ada di slot itu
+        data = resampleTimeSeriesWithMeanFill(validData, resampleInterval, fields);
         if (data.length === 0) {
           alert('No data available after resampling.');
           return;
@@ -331,68 +314,57 @@ const getMissingDates = (data, startDate, endDate) => {
       }
     }
 
-    // Generate filename dengan info lengkap
-    const interpolationSuffix = enableInterpolation ? `_interpolated_${interpolationInterval}min` : '';
-    const smoothingSuffix = enableSmoothing ? '_smoothed' : '';
-    const resampleSuffix = enableResampling ? `_resampled_${resampleInterval}min_${resampleMethod}` : '';
-    const baseFilename = `Petengoran_${selectedStation.replace(' ', '_')}_data${interpolationSuffix}${smoothingSuffix}${resampleSuffix}`;
+       let filename = `${selectedStation.replace(' ', '_')}_${startDate}_to_${endDate}`;
+    if (enableResampling) {
+      filename += `_resample${resampleInterval}m`;
+    }
 
     if (fileFormat === 'json') {
-      const actualDataCount = data.filter(item => !item.interpolated).length;
-      const interpolatedCount = data.filter(item => item.interpolated).length;
-      const jsonData = {
-        metadata: {
-          station: selectedStation,
-          dateRange: `${startDate} to ${endDate}`,
-          exportTime: formatUserFriendlyDate(new Date().toISOString()),
-          totalRecords: data.length,
-          actualRecords: actualDataCount,
-          interpolatedRecords: interpolatedCount,
-          processing: {
-            interpolation: enableInterpolation ? {
-              enabled: true,
-              interval: `${interpolationInterval} minutes`,
-              smoothing: enableSmoothing
-            } : { enabled: false },
-            resampling: enableResampling ? {
-              enabled: true,
-              interval: `${resampleInterval} minutes`,
-              method: resampleMethod
-            } : { enabled: false }
-          }
-        },
-        data: data.map((item, index) => {
-          const base = {
-            no: index + 1,
-            tanggalWaktu: item.userFriendlyDate,
-            timestamp: item.timestamp,
-            status: item.interpolated ? 'Estimasi' : 'Aktual',
-            kelembapan: `${parseFloat(item.humidity || 0).toFixed(1)}%`,
-            suhu: `${parseFloat(item.temperature || 0).toFixed(1)}°C`,
-            curahHujan: `${parseFloat(item.rainfall || 0).toFixed(1)}mm`,
-            kecepatanAngin: `${parseFloat(item.windspeed || 0).toFixed(1)}m/s`,
-            radiasiMatahari: `${parseFloat(item.irradiation || 0).toFixed(0)}W/m²`,
-            arahAngin: item.windDirection || '',
-            sudutAngin: `${parseFloat(item.angle || 0).toFixed(0)}°`,
-            bmpTemperature: `${parseFloat(item.bmptemperature || 0).toFixed(1)}°C`,
-            airPressure: `${parseFloat(item.airpressure || 0).toFixed(2)} hPa`,
-            waterTemperature: `${parseFloat(item.suhuair || 0).toFixed(1)}°C`
-          };
-          return base;
-        })
-      };
-      const blob = new Blob([JSON.stringify(jsonData, null, 2)], {
-        type: 'application/json;charset=utf-8;'
-      });
-      saveAs(blob, `${baseFilename}.json`);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      saveAs(blob, `${filename}.json`);
     } else if (fileFormat === 'csv') {
-      const csvContent = createFormattedCSV(data, selectedStation);
-      const blob = new Blob([csvContent], {
-        type: 'text/csv;charset=utf-8;'
-      });
-      saveAs(blob, `${baseFilename}.csv`);
+      const csv = createFormattedCSV(data, selectedStation);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      saveAs(blob, `${filename}.csv`);
     }
   };
+
+  // Fungsi resampling dengan mean fill untuk gap data
+  function resampleTimeSeriesWithMeanFill(data, intervalMinutes, fields) {
+    if (!Array.isArray(data) || data.length === 0) return [];
+    // Sort data by timestamp ascending
+    data = [...data].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    const start = new Date(data[0].timestamp);
+    const end = new Date(data[data.length - 1].timestamp);
+    let result = [];
+    let current = new Date(start);
+    while (current <= end) {
+      // Ambil data dalam slot waktu ini
+      let next = new Date(current);
+      next.setMinutes(next.getMinutes() + intervalMinutes);
+      let slotData = data.filter(item => {
+        let t = new Date(item.timestamp);
+        return t >= current && t < next;
+      });
+      let resampled = { timestamp: current.toISOString(), userFriendlyDate: formatUserFriendlyDate(current.toISOString()) };
+      fields.forEach(field => {
+        if (slotData.length === 0) {
+          // Jika slot kosong, isi dengan mean dari seluruh data
+          const mean = data.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0) / data.length;
+          resampled[field] = isNaN(mean) ? null : mean;
+        } else {
+          // Jika ada data, ambil mean slot
+          const mean = slotData.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0) / slotData.length;
+          resampled[field] = isNaN(mean) ? null : mean;
+        }
+      });
+      result.push(resampled);
+      current = next;
+    }
+    return result;
+  }
+
+// ...existing code...
 
   const handleLoginSubmit = () => {
     if (username === 'admin' && password === 'admin123') {
@@ -407,15 +379,14 @@ const getMissingDates = (data, startDate, endDate) => {
     return selectedStation === 'Station 1' ? station1Data : station2Data;
   };
 
-const filterDataByDate = (data) => {
-  if (!startDate || !endDate) return [];
-  return data.filter((item) => {
-    if (!item.timestamp) return false;
-    // Ambil tanggal UTC dari timestamp ISO
-    const itemYMD = new Date(item.timestamp).toISOString().slice(0, 10);
-    return itemYMD >= startDate && itemYMD <= endDate;
-  });
-};
+  const filterDataByDate = (data) => {
+    if (!startDate || !endDate) return [];
+    return data.filter((item) => {
+      if (!item.timestamp) return false;
+      const itemYMD = new Date(item.timestamp).toISOString().slice(0, 10);
+      return itemYMD >= startDate && itemYMD <= endDate;
+    });
+  };
 
   return (
     <Container style={{ marginTop: '20px' }}>
@@ -449,16 +420,14 @@ const filterDataByDate = (data) => {
               type="date"
               value={startDate}
               onChange={(e) => {
-                  // Konversi ke format YYYY-MM-DD jika perlu
-                  const val = e.target.value;
-                  // Jika format DD/MM/YYYY, ubah ke YYYY-MM-DD
-                  let iso = val;
-                  if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
-                    const [d, m, y] = val.split('/');
-                    iso = `${y}-${m}-${d}`;
-                  }
-                  setStartDate(iso);
-                }}
+                const val = e.target.value;
+                let iso = val;
+                if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
+                  const [d, m, y] = val.split('/');
+                  iso = `${y}-${m}-${d}`;
+                }
+                setStartDate(iso);
+              }}
               className="shadow-sm"
             />
           </Form.Group>
@@ -510,62 +479,7 @@ const filterDataByDate = (data) => {
         </Col>
       </Row>
 
-      {/* Data Enhancement Options */}
-      <Row className="mt-4">
-        <Col>
-          <Form.Group>
-            <Form.Check
-              type="checkbox"
-              label="Enable Data Interpolation (Mengisi Gap Data)"
-              checked={enableInterpolation}
-              onChange={(e) => setEnableInterpolation(e.target.checked)}
-              className="fw-bold"
-            />
-            <Form.Text className="text-muted">
-              Mengisi celah data yang hilang dengan estimasi interpolasi untuk data yang lebih lengkap
-            </Form.Text>
-          </Form.Group>
-        </Col>
-      </Row>
-
-      {enableInterpolation && (
-        <>
-          <Row className="mt-3">
-            <Col md={6}>
-              <Form.Group controlId="interpolationInterval">
-                <Form.Label className="fw-bold">Interval Interpolasi (minutes)</Form.Label>
-                <Form.Select
-                  value={interpolationInterval}
-                  onChange={(e) => setInterpolationInterval(parseInt(e.target.value))}
-                  className="shadow-sm"
-                >
-                  <option value={1}>1 minute</option>
-                  <option value={5}>5 minutes</option>
-                  <option value={10}>10 minutes</option>
-                  <option value={15}>15 minutes</option>
-                  <option value={30}>30 minutes</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group>
-                <Form.Check
-                  type="checkbox"
-                  label="Enable Data Smoothing"
-                  checked={enableSmoothing}
-                  onChange={(e) => setEnableSmoothing(e.target.checked)}
-                  className="fw-bold"
-                />
-                <Form.Text className="text-muted">
-                  Menghaluskan data untuk mengurangi noise
-                </Form.Text>
-              </Form.Group>
-            </Col>
-          </Row>
-        </>
-      )}
-
-      {/* Resampling Options */}
+      {/* Hapus fitur interpolasi, hanya resampling */}
       <Row className="mt-4">
         <Col>
           <Form.Group>
@@ -583,46 +497,47 @@ const filterDataByDate = (data) => {
         </Col>
       </Row>
 
+      {/* Pilihan timeframe seperti gambar */}
       {enableResampling && (
-        <>
-          <Row className="mt-3">
-            <Col md={6}>
-              <Form.Group controlId="resampleInterval">
-                <Form.Label className="fw-bold">Interval (minutes)</Form.Label>
-                <Form.Select
-                  value={resampleInterval}
-                  onChange={(e) => setResampleInterval(parseInt(e.target.value))}
-                  className="shadow-sm"
-                >
-                  <option value={5}>5 minutes</option>
-                  <option value={15}>15 minutes</option>
-                  <option value={30}>30 minutes</option>
-                  <option value={60}>1 hour</option>
-                  <option value={360}>6 hours</option>
-                  <option value={720}>12 hours</option>
-                  <option value={1440}>1 day</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group controlId="resampleMethod">
-                <Form.Label className="fw-bold">Aggregation Method</Form.Label>
-                <Form.Select
-                  value={resampleMethod}
-                  onChange={(e) => setResampleMethod(e.target.value)}
-                  className="shadow-sm"
-                >
-                  <option value="mean">Average (Mean)</option>
-                  <option value="first">First Value</option>
-                  <option value="last">Last Value</option>
-                  <option value="max">Maximum</option>
-                  <option value="min">Minimum</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-          </Row>
-        </>
+        <Row className="mt-3">
+          <Col md={6}>
+            <Form.Group>
+              <Form.Label className="fw-bold">Select timeframe</Form.Label>
+              <div>
+                <Form.Check
+                  type="radio"
+                  label="1menit"
+                  name="timeframe"
+                  value={1}
+                  checked={resampleInterval === 1}
+                  onChange={() => setResampleInterval(1)}
+                  className="mb-2"
+                />
+                <Form.Check
+                  type="radio"
+                  label="15menit"
+                  name="timeframe"
+                  value={15}
+                  checked={resampleInterval === 15}
+                  onChange={() => setResampleInterval(15)}
+                  className="mb-2"
+                />
+                <Form.Check
+                  type="radio"
+                  label="30menit"
+                  name="timeframe"
+                  value={30}
+                  checked={resampleInterval === 30}
+                  onChange={() => setResampleInterval(30)}
+                  className="mb-2"
+                />
+              </div>
+            </Form.Group>
+          </Col>
+        </Row>
       )}
+
+
 
       <Row className="mt-4">
         <Col className="text-center">
@@ -646,9 +561,6 @@ const filterDataByDate = (data) => {
               <small className="text-muted">
                 Petengoran {selectedStation}: {getStationData().length} records
                 <br />
-                {enableInterpolation && (
-                  <><strong>Interpolasi:</strong> Interval {interpolationInterval} menit{enableSmoothing && ' + Smoothing'}<br /></>
-                )}
                 {enableResampling && (
                   <><strong>Resampling:</strong> {resampleInterval} menit ({resampleMethod})<br /></>
                 )}
