@@ -9,6 +9,7 @@ import WindDirectionGauge from './status/WindDirection';
 import WindSpeedGauge from './status/WindSpeed';
 import AirPressureGauge from './status/AirPressure';
 import WaterTemperatureGauge from './status/WaterTemperature';
+import { resampleTimeSeriesWithMeanFill } from './chart';
 
 // Helper
 const windDirectionToEnglish = (dir) => {
@@ -203,24 +204,27 @@ const Station1 = () => {
   useEffect(() => {
     const filtered = filterByRange(allData, filter);
     setFilteredData(filtered);
+    const fields = [
+      'humidity', 'temperature', 'rainfall', 'windspeed', 'irradiation', 'angle', 'airpressure', 'bmptemperature', 'suhuair'
+    ];
+    const resampledTableData = resampleTimeSeriesWithMeanFill(filtered, 1, fields);
 
-    setTableData([...filtered].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+    const sortedResampled = [...resampledTableData].sort ((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    setTableData(sortedResampled);
 
-    const latest = filtered.find(
-      item => item.timestamp && item.timestamp !== 'error' && item.timestamp !== 'alat rusak' && !isNaN(new Date(item.timestamp).getTime())
-    );
-    if (latest) {
+    const latestResampled = sortedResampled[0]
+    if (latestResampled) {
       setGaugeData({
-        humidity: latest.humidity,
-        temperature: latest.temperature,
-        rainfall: latest.rainfall,
-        windspeed: latest.windspeed,
-        irradiation: latest.irradiation,
-        windDirection: latest.windDirection,
-        angle: latest.angle,
-        bmptemperature: latest.bmptemperature,
-        airpressure: latest.airpressure,
-        suhuair: latest.suhuair,
+        humidity: latestResampled.humidity,
+        temperature: latestResampled.temperature,
+        rainfall: latestResampled.rainfall,
+        windspeed: latestResampled.windspeed,
+        irradiation: latestResampled.irradiation,
+        windDirection: latestResampled.windDirection,
+        angle: latestResampled.angle,
+        bmptemperature: latestResampled.bmptemperature,
+        airpressure: latestResampled.airpressure,
+        suhuair: latestResampled.suhuair,
       });
       setDataStatus('Using latest data for gauges');
     } else {

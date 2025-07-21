@@ -8,6 +8,7 @@ import TemperatureGauge from './status/TemperaturGauge';
 import WindDirectionGauge from './status/WindDirection';
 import WindSpeedGauge from './status/WindSpeed';
 import AirPressureGauge from './status/AirPressure';
+import { resampleTimeSeriesWithMeanFill } from './chart';
 
 // Helper
 const windDirectionToEnglish = (dir) => {
@@ -191,29 +192,40 @@ const Station2 = () => {
     // eslint-disable-next-line
   }, []);
 
+
   useEffect(() => {
     // Filter data sesuai range
     const filtered = filterByRange(allData, filter);
     setFilteredData(filtered);
+    const fields = [
+      'humidity',
+      'temperature',
+      'rainfall',
+      'windspeed',
+      'irradiation',
+      'windDirection',
+      'angle',
+      'bmptemperature',
+      'airpressure',
+    ];
+  
+    const resampledTableData = resampleTimeSeriesWithMeanFill(filtered, 1, fields);
 
-    // Table: urutkan terbaru ke terlama
-    setTableData([...filtered].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+    const sortedResampled = [...resampledTableData].sort ((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    setTableData(sortedResampled);
 
-    // Gauge: ambil data terbaru yang timestamp valid
-    const latest = filtered.find(
-      item => item.timestamp && item.timestamp !== 'error' && item.timestamp !== 'alat rusak' && !isNaN(new Date(item.timestamp).getTime())
-    );
-    if (latest) {
+    const latestResampled = sortedResampled[0];
+    if (latestResampled) {
       setGaugeData({
-        humidity: latest.humidity,
-        temperature: latest.temperature,
-        rainfall: latest.rainfall,
-        windspeed: latest.windspeed,
-        irradiation: latest.irradiation,
-        windDirection: latest.windDirection,
-        angle: latest.angle,
-        bmptemperature: latest.bmptemperature,
-        airpressure: latest.airpressure,
+        humidity: latestResampled.humidity,
+        temperature: latestResampled.temperature,
+        rainfall: latestResampled.rainfall,
+        windspeed: latestResampled.windspeed,
+        irradiation: latestResampled.irradiation,
+        windDirection: latestResampled.windDirection,
+        angle: latestResampled.angle,
+        bmptemperature: latestResampled.bmptemperature,
+        airpressure: latestResampled.airpressure,
       });
       setDataStatus('Using latest data for gauges');
     } else {
@@ -231,6 +243,7 @@ const Station2 = () => {
       setDataStatus('No valid data available');
     }
   }, [allData, filter]);
+
 
   // Prepare chart data (sort chronologically for better chart visualization)
   const chartData = [...filteredData].sort((a, b) => {

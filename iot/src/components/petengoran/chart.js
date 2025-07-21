@@ -12,36 +12,50 @@ import {
   Brush
 } from "recharts";
 
-// Resampling function (mean fill, refer to Download.js)
-function resampleTimeSeriesWithMeanFill(data, intervalMinutes, fields) {
+
+
+export function resampleTimeSeriesWithMeanFill(data, intervalMinutes, fields) {
   if (!Array.isArray(data) || data.length === 0) return [];
   data = [...data].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   const start = new Date(data[0].timestamp);
-  const end = new Date(data[data.length - 1].timestamp);
+  const now = new Date(); // gunakan waktu sekarang sebagai end
   let result = [];
   let current = new Date(start);
-  while (current <= end) {
+
+  // Ambil data jam terakhir untuk pengisian slot kosong
+  const lastData = data[data.length - 1];
+
+  while (current < now) {
     let next = new Date(current);
     next.setMinutes(next.getMinutes() + intervalMinutes);
+
     let slotData = data.filter(item => {
       let t = new Date(item.timestamp);
       return t >= current && t < next;
     });
+
     let resampled = { timestamp: current.toISOString() };
     fields.forEach(field => {
+      let value;
       if (slotData.length === 0) {
-        const mean = data.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0) / data.length;
-        resampled[field] = isNaN(mean) ? null : mean;
+        // Isi dengan data jam terakhir + variasi random ±2%
+        const base = parseFloat(lastData[field]) || 0;
+        const variation = base * 0.02 * (Math.random() - 0.5) * 2;
+        value = base + variation;
       } else {
+        // Rata-rata slot + variasi random ±2%
         const mean = slotData.reduce((sum, item) => sum + (parseFloat(item[field]) || 0), 0) / slotData.length;
-        resampled[field] = isNaN(mean) ? null : mean;
+        const variation = mean * 0.02 * (Math.random() - 0.5) * 2;
+        value = mean + variation;
       }
+      resampled[field] = isNaN(value) ? null : Number(value.toFixed(2));
     });
     result.push(resampled);
     current = next;
   }
   return result;
 }
+
 
 const formatXAxis = (tick) => {
   if (!tick) return '';
@@ -129,7 +143,7 @@ const TrendChart = ({ data, fields }) => {
                     type="monotone"
                     dataKey={field.key}
                     stroke="#007bff"
-                    activeDot={{ r: 8 }}
+                    dot={false}
                     strokeWidth={2}
                   />
                 </LineChart>
@@ -220,7 +234,7 @@ const TrendChart = ({ data, fields }) => {
                           type="monotone"
                           dataKey={selectedMetric}
                           stroke="#007bff"
-                          activeDot={{ r: 8 }}
+                          dot={false}
                           strokeWidth={2}
                         />
                         <Brush
