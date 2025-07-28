@@ -75,6 +75,16 @@ const formatUserFriendlyTimestamp = (timestamp) => {
 const isValidValue = (val) =>
   val !== null && val !== undefined && val !== 'error' && val !== 'alat rusak' && !isNaN(Number(val));
 
+
+const parseCustomTimestamp = (ts) => {
+  // Format: "28-07-25 07:00:00" => "2025-07-28T07:00:00"
+  if (!ts || typeof ts !== 'string') return ts;
+  const match = ts.match(/^(\d{2})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);
+  if (!match) return ts;
+  const [_, dd, mm, yy, h, m, s] = match;
+  return `20${yy}-${mm}-${dd}T${h}:${m}:${s}`;
+};
+
 const mapApiData = (item) => {
   if (!item) {
     return {
@@ -90,7 +100,7 @@ const mapApiData = (item) => {
       airpressure: 'error',
     };
   }
-  const ts = item.timestamp;
+  const ts = parseCustomTimestamp(item.timestamp); // <-- tambahkan parsing timestamp
   if (ts === undefined || ts === null || ts === '') {
     return {
       timestamp: 'alat rusak',
@@ -110,14 +120,15 @@ const mapApiData = (item) => {
     humidity: isValidValue(item.humidity) ? Number(item.humidity) : 'alat rusak',
     temperature: isValidValue(item.temperature) ? Number(item.temperature) : 'alat rusak',
     rainfall: isValidValue(item.rainfall) ? Number(item.rainfall) : 'alat rusak',
-    windspeed: isValidValue(item.windspeed ?? item.wind_speed) ? Number(item.windspeed ?? item.wind_speed) : 'alat rusak',
+    windspeed: isValidValue(item.windSpeed ?? item.windspeed ?? item.wind_speed) ? Number(item.windSpeed ?? item.windspeed ?? item.wind_speed) : 'alat rusak',
     irradiation: isValidValue(item.pyrano) ? Number(item.pyrano) : (isValidValue(item.irradiation) ? Number(item.irradiation) : 'alat rusak'),
     windDirection: windDirectionToEnglish(item.direction ?? ''),
     angle: isValidValue(item.angle) ? Number(item.angle) : 'alat rusak',
-    bmptemperature: isValidValue(item.bmptemperature) ? Number(item.bmptemperature) : 'alat rusak',
-    airpressure: isValidValue(item.airpressure) ? Number(item.airpressure) : 'alat rusak',
+    bmptemperature: isValidValue(item.bmpTemperature ?? item.bmptemperature) ? Number(item.bmpTemperature ?? item.bmptemperature) : 'alat rusak',
+    airpressure: isValidValue(item.airPressure ?? item.airpressure) ? Number(item.airPressure ?? item.airpressure) : 'alat rusak',
   };
 };
+
 
 function filterByRange(data, filter) {
   if (!Array.isArray(data) || data.length === 0) return [];
