@@ -167,16 +167,27 @@ const Station2 = () => {
   });
   const [dataStatus, setDataStatus] = useState('');
 
-  // Only use 15m resample for all filter
-  const API_URL = process.env.REACT_APP_API_PETENGORAN_RESAMPLE15M_STATION2;
+  // Get API URL based on filter
+  const getApiUrl = (filterType) => {
+    switch (filterType) {
+      case '1d':
+        return process.env.REACT_APP_API_PETENGORAN_DAILY_STATION2;
+      case '7d':
+        return process.env.REACT_APP_API_PETENGORAN_DAILY_STATION2; // Use daily for 7 days and filter client-side
+      case '1m':
+        return process.env.REACT_APP_API_PETENGORAN_RESAMPLE15M_STATION2;
+      default:
+        return process.env.REACT_APP_API_PETENGORAN_DAILY_STATION2;
+    }
+  };
 
-  // Fetch data dari API 15m untuk semua filter
+  // Fetch data dari API berdasarkan filter
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const url = API_URL;
-      if (!url) throw new Error(`No API URL configured`);
+      const url = getApiUrl(filter);
+      if (!url) throw new Error(`No API URL configured for filter: ${filter}`);
       const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
@@ -201,7 +212,7 @@ const Station2 = () => {
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line
-  }, []);
+  }, [filter]);
 
 
   useEffect(() => {
@@ -367,6 +378,26 @@ const Station2 = () => {
         </Row>
         <Row className="mt-5 mb-3">
           <Col className="text-center">
+            <ButtonGroup>
+              <Button
+                variant={filter === '1d' ? 'primary' : 'outline-primary'}
+                onClick={() => setFilter('1d')}
+              >
+                1 Hari Terakhir
+              </Button>
+              <Button
+                variant={filter === '7d' ? 'primary' : 'outline-primary'}
+                onClick={() => setFilter('7d')}
+              >
+                7 Hari Terakhir
+              </Button>
+              <Button
+                variant={filter === '1m' ? 'primary' : 'outline-primary'}
+                onClick={() => setFilter('1m')}
+              >
+                1 Bulan Terakhir
+              </Button>
+            </ButtonGroup>
           </Col>
         </Row>
         <Row>

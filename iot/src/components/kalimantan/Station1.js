@@ -165,14 +165,26 @@ const Station1 = () => {
   });
   const [dataStatus, setDataStatus] = useState('');
 
-  const API_URL = process.env.REACT_APP_API_KALIMANTAN_ONEMONTH_TOPIC1;
+  // Get API URL based on filter
+  const getApiUrl = (filterType) => {
+    switch (filterType) {
+      case '1d':
+        return process.env.REACT_APP_API_KALIMANTAN_ONEDAY_TOPIC1;
+      case '7d':
+        return process.env.REACT_APP_API_KALIMANTAN_SEVENDAYS_TOPIC1;
+      case '1m':
+        return process.env.REACT_APP_API_KALIMANTAN_ONEMONTH_TOPIC1;
+      default:
+        return process.env.REACT_APP_API_KALIMANTAN_ONEDAY_TOPIC1;
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const url = API_URL;
-      if (!url) throw new Error(`No API URL configured`);
+      const url = getApiUrl(filter);
+      if (!url) throw new Error(`No API URL configured for filter: ${filter}`);
       const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
@@ -198,7 +210,7 @@ const Station1 = () => {
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line
-  }, []);
+  }, [filter]);
 
   useEffect(() => {
     const filtered = filterByRange(allData, filter);
@@ -335,7 +347,7 @@ const Station1 = () => {
         </Row>
         <Row className="mt-5 mb-3">
           <Col className="text-center">
-            {/* <ButtonGroup>
+            <ButtonGroup>
               <Button
                 variant={filter === '1d' ? 'primary' : 'outline-primary'}
                 onClick={() => setFilter('1d')}
@@ -354,7 +366,7 @@ const Station1 = () => {
               >
                 1 Bulan Terakhir
               </Button>
-            </ButtonGroup> */}
+            </ButtonGroup>
           </Col>
         </Row>
         <Row>
