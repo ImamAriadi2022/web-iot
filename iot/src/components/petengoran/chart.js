@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Button, ButtonGroup, Col, Modal, Row } from "react-bootstrap";
 import {
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Brush
+    Brush,
+    CartesianGrid,
+    Legend,
+    Line,
+    LineChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis
 } from "recharts";
 
 
@@ -26,15 +26,16 @@ export function resampleTimeSeriesWithMeanFill(data, intervalMinutes, fields) {
   const lastData = data[data.length - 1];
 
   while (current < now) {
-    let next = new Date(current);
+    const currentTime = new Date(current);
+    let next = new Date(currentTime);
     next.setMinutes(next.getMinutes() + intervalMinutes);
 
     let slotData = data.filter(item => {
       let t = new Date(item.timestamp);
-      return t >= current && t < next;
+      return t >= currentTime && t < next;
     });
 
-    let resampled = { timestamp: current.toISOString() };
+    let resampled = { timestamp: currentTime.toISOString() };
     fields.forEach(field => {
       let value;
       if (slotData.length === 0) {

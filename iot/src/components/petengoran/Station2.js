@@ -151,7 +151,6 @@ const Station2 = () => {
   const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [tableData, setTableData] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [gaugeData, setGaugeData] = useState({
     humidity: 0,
@@ -164,7 +163,6 @@ const Station2 = () => {
     bmptemperature: 0,
     airpressure: 0,
   });
-  const [dataStatus, setDataStatus] = useState('');
 
   // Get API URL based on filter
   const getApiUrl = (filterType) => {
@@ -247,7 +245,6 @@ const Station2 = () => {
         bmptemperature: latestResampled.bmptemperature,
         airpressure: latestResampled.airpressure,
       });
-      setDataStatus('Using latest data for gauges');
     } else {
       setGaugeData({
         humidity: 0,
@@ -260,20 +257,9 @@ const Station2 = () => {
         bmptemperature: 0,
         airpressure: 0,
       });
-      setDataStatus('No valid data available');
     }
   }, [allData, filter]);
 
-
-  // Prepare chart data (sort chronologically for better chart visualization)
-  const chartData = [...filteredData].sort((a, b) => {
-    if (a.timestamp === 'error' || a.timestamp === 'alat rusak' || b.timestamp === 'error' || b.timestamp === 'alat rusak') {
-      return 0;
-    }
-    const timeA = new Date(a.timestamp);
-    const timeB = new Date(b.timestamp);
-    return timeA - timeB;
-  });
 
   return (
     <section

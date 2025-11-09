@@ -162,11 +162,10 @@ function filterByRange(data, filter) {
 }
 
 const Station1 = () => {
-  const [filter, setFilter] = useState('1d');
+  const [filter] = useState('1d');
   const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [tableData, setTableData] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [gaugeData, setGaugeData] = useState({
     humidity: 0,
@@ -180,7 +179,6 @@ const Station1 = () => {
     airpressure: 0,
     suhuair: 0,
   });
-  const [dataStatus, setDataStatus] = useState('');
 
   const API_URL = process.env.REACT_APP_API_PETENGORAN_RESAMPLE15M_STATION1;
 
@@ -234,45 +232,33 @@ const Station1 = () => {
   
       const latestResampled = last10[0];
       if (latestResampled) {
-        setGaugeData({
-          humidity: latestResampled.humidity,
-          temperature: latestResampled.temperature,
-          rainfall: latestResampled.rainfall,
-          windspeed: latestResampled.windspeed,
-          irradiation: latestResampled.irradiation,
-          windDirection: latestResampled.windDirection,
-          angle: latestResampled.angle,
-          bmptemperature: latestResampled.bmptemperature,
-          airpressure: latestResampled.airpressure,
-          suhuair: latestResampled.suhuair,
-        });
-        setDataStatus('Using latest resampled data for gauges');
-      } else {
-        setGaugeData({
-          humidity: 0,
-          temperature: 0,
-          rainfall: 0,
-          windspeed: 0,
-          irradiation: 0,
-          windDirection: '',
-          angle: 0,
-          bmptemperature: 0,
-          airpressure: 0,
-          suhuair: 0,
-        });
-        setDataStatus('No valid data available');
-      }
-    }, [allData, filter]);
-
-
-  const chartData = [...filteredData].sort((a, b) => {
-    if (a.timestamp === 'error' || a.timestamp === 'alat rusak' || b.timestamp === 'error' || b.timestamp === 'alat rusak') {
-      return 0;
+      setGaugeData({
+        humidity: latestResampled.humidity,
+        temperature: latestResampled.temperature,
+        rainfall: latestResampled.rainfall,
+        windspeed: latestResampled.windspeed,
+        irradiation: latestResampled.irradiation,
+        windDirection: latestResampled.windDirection,
+        angle: latestResampled.angle,
+        bmptemperature: latestResampled.bmptemperature,
+        airpressure: latestResampled.airpressure,
+        suhuair: latestResampled.suhuair,
+      });
+    } else {
+      setGaugeData({
+        humidity: 0,
+        temperature: 0,
+        rainfall: 0,
+        windspeed: 0,
+        irradiation: 0,
+        windDirection: '',
+        angle: 0,
+        bmptemperature: 0,
+        airpressure: 0,
+        suhuair: 0,
+      });
     }
-    const timeA = new Date(a.timestamp);
-    const timeB = new Date(b.timestamp);
-    return timeA - timeB;
-  });
+  }, [allData, filter]);
 
   return (
     <section
