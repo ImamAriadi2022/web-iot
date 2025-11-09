@@ -2,5 +2,11 @@
   "buildCommand": "cd iot && npm install && npm run build",
   "outputDirectory": "iot/build",
   "framework": null,
-  "installCommand": "cd iot && npm install"
+  "installCommand": "cd iot && npm install",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
