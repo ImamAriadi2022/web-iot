@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Button, ButtonGroup, Col, Container, Row, Table } from 'react-bootstrap';
-import TrendChart from "./chart";
+import { Col, Container, Row, Table } from 'react-bootstrap';
+import TrendChart, { resampleTimeSeriesWithMeanFill } from "./chart";
+import AirPressureGauge from './status/AirPressure';
 import HumidityGauge from './status/HumidityGauge';
 import IrradiationGauge from './status/Irradiation';
 import RainfallGauge from './status/Rainfall';
 import TemperatureGauge from './status/TemperaturGauge';
+import WaterTemperatureGauge from './status/WaterTemperature';
 import WindDirectionGauge from './status/WindDirection';
 import WindSpeedGauge from './status/WindSpeed';
-import AirPressureGauge from './status/AirPressure';
-import WaterTemperatureGauge from './status/WaterTemperature';
-import { resampleTimeSeriesWithMeanFill } from './chart';
 
 // Helper
 const windDirectionToEnglish = (dir) => {
@@ -187,7 +186,7 @@ const Station1 = () => {
 
 
   const fetchData = async () => {
-    setLoading(true);
+    // Hapus setLoading(true) agar tidak ada loading indicator visual
     setError(null);
     try {
       const url = API_URL;
@@ -205,9 +204,8 @@ const Station1 = () => {
     } catch (err) {
       setError(`Failed to fetch data: ${err.message}`);
       setAllData([]);
-    } finally {
-      setLoading(false);
     }
+    // Hapus finally block setLoading(false)
   };
 
 
@@ -292,22 +290,9 @@ const Station1 = () => {
             <h2 className="text-center" style={{ color: '#007bff' }}>Environment Status</h2>
             <p className="text-center">Data collected from Station 1 (Petengoran)</p>
             <div className="text-center mb-3">
-              {loading && (
-                <div className="alert alert-info" role="alert">
-                  <div className="spinner-border spinner-border-sm me-2" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
-                  Loading data...
-                </div>
-              )}
               {error && (
                 <div className="alert alert-danger" role="alert">
                   <strong>Error:</strong> {error}
-                </div>
-              )}
-              {!loading && !error && dataStatus && (
-                <div className={`alert ${dataStatus.includes('latest data') ? 'alert-success' : 'alert-warning'}`} role="alert">
-                  <strong>Data Status:</strong> {dataStatus}
                 </div>
               )}
             </div>

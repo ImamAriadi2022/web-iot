@@ -209,7 +209,7 @@ const Download = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
+        // Hapus setLoading(true) untuk menghilangkan delay visual
         setDataReady(false);
         const res = await fetch(API_KALIMANTAN_TOPIC1);
         if (!res.ok) throw new Error('Failed to fetch data');
@@ -220,9 +220,8 @@ const Download = () => {
       } catch (error) {
         setStation1Data([]);
         setDataReady(false);
-      } finally {
-        setLoading(false);
       }
+      // Hapus finally block setLoading(false)
     };
     fetchData();
   }, []);
@@ -410,23 +409,8 @@ const Download = () => {
       )}
       <Row className="mt-4">
         <Col className="text-center">
-          {loading && (
+          {dataReady && (
             <div className="mb-3">
-              <div className="spinner-border text-primary me-2" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <span className="text-muted">Mengambil data dari server...</span>
-            </div>
-          )}
-          {!loading && !dataReady && (
-            <div className="mb-3">
-              <span className="text-warning">⏳ Mempersiapkan data...</span>
-            </div>
-          )}
-          {!loading && dataReady && (
-            <div className="mb-3">
-              <span className="text-success">✅ Data siap untuk diunduh!</span>
-              <br />
               <small className="text-muted">
                 Station 1: {station1Data.length} records
                 <br />
@@ -440,9 +424,9 @@ const Download = () => {
             variant="success"
             onClick={handleDownload}
             className="px-5 py-2 fw-bold shadow-lg"
-            disabled={loading || !dataReady}
+            disabled={!dataReady}
           >
-            {loading ? 'Loading Data...' : !dataReady ? 'Preparing Data...' : 'Download Data'}
+            Download Data
           </Button>
         </Col>
       </Row>
