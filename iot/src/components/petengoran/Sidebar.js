@@ -47,7 +47,7 @@ const Sidebar = ({ isOpen }) => {
             </li>
             <li style={{ marginBottom: '15px' }}>
               <Link
-                to="/petengoran/"
+                to="/petengoran"
                 style={{
                   textDecoration: 'none',
                   color: '#000',
@@ -61,7 +61,7 @@ const Sidebar = ({ isOpen }) => {
             </li>
             <li style={{ marginBottom: '15px' }}>
               <Link
-                to="/petengoran/station1"
+                to="station1"
                 style={{
                   textDecoration: 'none',
                   color: '#000',
@@ -75,7 +75,7 @@ const Sidebar = ({ isOpen }) => {
             </li>
             <li style={{ marginBottom: '15px' }}>
               <Link
-                to="/petengoran/station2"
+                to="station2"
                 style={{
                   textDecoration: 'none',
                   color: '#000',
@@ -89,7 +89,7 @@ const Sidebar = ({ isOpen }) => {
             </li>
             <li>
               <Link
-                to="/petengoran/download"
+                to="download"
                 style={{
                   textDecoration: 'none',
                   color: '#000',

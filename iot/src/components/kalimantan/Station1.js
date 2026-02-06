@@ -151,6 +151,7 @@ const Station1 = () => {
   const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [gaugeData, setGaugeData] = useState({
     humidity: 0,
